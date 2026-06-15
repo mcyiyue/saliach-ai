@@ -14,10 +14,10 @@ model User {
   email     String      @unique
   password  String      // hashed
   name      String
+  groupId   Int?
+  group     Group?      @relation(fields: [groupId], references: [id], onDelete: SetNull)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
-
-  groups    UserGroup[]
 }
 
 model Group {
@@ -27,18 +27,11 @@ model Group {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
-  users       UserGroup[]
+  users       User[]
   permissions GroupPermission[]
 }
 
-model UserGroup {
-  userId    Int
-  groupId   Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  @@id([userId, groupId])
-}
 
 model Module {
   id          Int       @id @default(autoincrement())

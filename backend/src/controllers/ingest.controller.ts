@@ -14,8 +14,16 @@ const chunkText = (text: string, maxChunkLength: number = 1000): string[] => {
   const chunks: string[] = [];
   
   for (const p of paragraphs) {
-    if (p.trim().length > 0) {
-      chunks.push(p.trim());
+    const trimmed = p.trim();
+    if (trimmed.length > 0) {
+      if (trimmed.length <= maxChunkLength) {
+        chunks.push(trimmed);
+      } else {
+        // Potong paragraf yang sangat panjang agar tidak melampaui batas token OpenAI
+        for (let i = 0; i < trimmed.length; i += maxChunkLength) {
+          chunks.push(trimmed.slice(i, i + maxChunkLength));
+        }
+      }
     }
   }
   

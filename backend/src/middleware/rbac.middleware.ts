@@ -47,23 +47,21 @@ export const requirePermission = (requiredRoute: string, action: 'read' | 'write
         return;
       }
 
-      // Check if user has permission through any of their groups
-      const userGroups = await prisma.userGroup.findMany({
-        where: { userId: req.user.id },
+      // Check if user has permission through their group
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
         select: { groupId: true },
       });
 
-      const groupIds = userGroups.map(ug => ug.groupId);
-
-      if (groupIds.length === 0) {
-        res.status(403).json({ message: 'Access denied: No groups assigned' });
+      if (!user || !user.groupId) {
+        res.status(403).json({ message: 'Access denied: No group assigned' });
         return;
       }
 
       const permission = await prisma.groupPermission.findFirst({
         where: {
           moduleId: module.id,
-          groupId: { in: groupIds },
+          groupId: user.groupId,
           ...(action === 'read' ? { canRead: true } : { canWrite: true }),
         },
       });

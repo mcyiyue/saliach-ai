@@ -6,11 +6,7 @@ export const getUsers = async (req: AuthRequest, res: Response): Promise<void> =
   try {
     const users = await prisma.user.findMany({
       include: {
-        groups: {
-          include: {
-            group: true
-          }
-        }
+        group: true
       },
       orderBy: { id: 'asc' }
     });
@@ -22,7 +18,7 @@ export const getUsers = async (req: AuthRequest, res: Response): Promise<void> =
       name: user.name,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      groups: user.groups.map(ug => ug.group)
+      group: user.group
     }));
 
     res.json(formatted);
@@ -34,7 +30,7 @@ export const getUsers = async (req: AuthRequest, res: Response): Promise<void> =
 
 export const createUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, email, password, groupIds } = req.body;
+    const { name, email, password, groupId } = req.body;
 
     if (!name || !email || !password) {
       res.status(400).json({ message: 'Name, email, and password are required' });
@@ -50,25 +46,15 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const newGroups = Array.isArray(groupIds) ? groupIds : [];
-
     const newUser = await prisma.user.create({
       data: {
         name,
         email,
         password, // stored plain text to match auth.controller.ts
-        groups: {
-          create: newGroups.map((gId: number) => ({
-            groupId: gId
-          }))
-        }
+        ...(groupId ? { groupId: Number(groupId) } : {})
       },
       include: {
-        groups: {
-          include: {
-            group: true
-          }
-        }
+        group: true
       }
     });
 
@@ -77,7 +63,7 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
       email: newUser.email,
       name: newUser.name,
       createdAt: newUser.createdAt,
-      groups: newUser.groups.map(ug => ug.group)
+      group: newUser.group
     });
   } catch (error) {
     console.error('Failed to create user:', error);
@@ -88,7 +74,7 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
 export const updateUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, email, password, groupIds } = req.body;
+    const { name, email, password, groupId } = req.body;
 
     const userId = Number(id);
     if (isNaN(userId)) {
@@ -114,35 +100,17 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const newGroups = Array.isArray(groupIds) ? groupIds : [];
-
-    const updatedUser = await prisma.$transaction(async (tx) => {
-      // 1. Delete old user-group mappings
-      await tx.userGroup.deleteMany({
-        where: { userId }
-      });
-
-      // 2. Update user info and re-create group mappings
-      return await tx.user.update({
-        where: { id: userId },
-        data: {
-          name,
-          email,
-          ...(password ? { password } : {}), // only update password if provided
-          groups: {
-            create: newGroups.map((gId: number) => ({
-              groupId: gId
-            }))
-          }
-        },
-        include: {
-          groups: {
-            include: {
-              group: true
-            }
-          }
-        }
-      });
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name,
+        email,
+        ...(password ? { password } : {}), // only update password if provided
+        groupId: groupId ? Number(groupId) : null
+      },
+      include: {
+        group: true
+      }
     });
 
     res.json({
@@ -150,7 +118,7 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
       email: updatedUser.email,
       name: updatedUser.name,
       createdAt: updatedUser.createdAt,
-      groups: updatedUser.groups.map(ug => ug.group)
+      group: updatedUser.group
     });
   } catch (error) {
     console.error('Failed to update user:', error);

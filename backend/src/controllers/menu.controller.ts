@@ -9,15 +9,13 @@ export const getMenuTree = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // 1. Get user's groups
-    const userGroups = await prisma.userGroup.findMany({
-      where: { userId: req.user.id },
+    // 1. Get user's group
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
       select: { groupId: true },
     });
 
-    const groupIds = userGroups.map(ug => ug.groupId);
-
-    if (groupIds.length === 0) {
+    if (!user || !user.groupId) {
       res.json([]);
       return;
     }
@@ -25,7 +23,7 @@ export const getMenuTree = async (req: AuthRequest, res: Response): Promise<void
     // 2. Get modules where group has canRead permission
     const permissions = await prisma.groupPermission.findMany({
       where: {
-        groupId: { in: groupIds },
+        groupId: user.groupId,
         canRead: true,
       },
       include: {

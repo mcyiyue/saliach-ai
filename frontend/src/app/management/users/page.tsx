@@ -15,7 +15,7 @@ interface User {
   email: string;
   name: string;
   createdAt: string;
-  groups: Group[];
+  group: Group | null;
 }
 
 export default function UsersPage() {
@@ -33,7 +33,7 @@ export default function UsersPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
 
@@ -97,7 +97,7 @@ export default function UsersPage() {
     setName('');
     setEmail('');
     setPassword('');
-    setSelectedGroupIds([]);
+    setSelectedGroupId(null);
     setFormError('');
     setIsModalOpen(true);
   };
@@ -108,17 +108,9 @@ export default function UsersPage() {
     setName(user.name);
     setEmail(user.email);
     setPassword(''); // leave password empty in edit mode
-    setSelectedGroupIds(user.groups.map(g => g.id));
+    setSelectedGroupId(user.group ? user.group.id : null);
     setFormError('');
     setIsModalOpen(true);
-  };
-
-  const handleCheckboxChange = (groupId: number) => {
-    setSelectedGroupIds(prev =>
-      prev.includes(groupId)
-        ? prev.filter(id => id !== groupId)
-        : [...prev, groupId]
-    );
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -146,7 +138,7 @@ export default function UsersPage() {
     const payload: any = {
       name,
       email,
-      groupIds: selectedGroupIds
+      groupId: selectedGroupId
     };
     if (password) {
       payload.password = password;
@@ -305,20 +297,17 @@ export default function UsersPage() {
                     <td className="p-4 text-sm font-medium text-muted-foreground">{user.email}</td>
                     <td className="p-4">
                       <div className="flex flex-wrap gap-1">
-                        {user.groups.length === 0 ? (
+                        {!user.group ? (
                           <span className="text-xs text-muted-foreground/50 italic">Tidak ada grup</span>
                         ) : (
-                          user.groups.map(g => (
-                            <span 
-                              key={g.id} 
-                              className={`text-xs px-2.5 py-0.5 rounded-full font-medium border ${g.id === 1 
-                                ? 'bg-purple-950/20 text-purple-400 border-purple-900/30' 
-                                : 'bg-primary/10 text-primary border-primary/20'
-                              }`}
-                            >
-                              {g.name}
-                            </span>
-                          ))
+                          <span 
+                            className={`text-xs px-2.5 py-0.5 rounded-full font-medium border ${user.group.id === 1 
+                              ? 'bg-purple-950/20 text-purple-400 border-purple-900/30' 
+                              : 'bg-primary/10 text-primary border-primary/20'
+                            }`}
+                          >
+                            {user.group.name}
+                          </span>
                         )}
                       </div>
                     </td>
@@ -414,7 +403,7 @@ export default function UsersPage() {
                   />
                 </div>
 
-                {/* Groups checkboxes */}
+                {/* Group radio */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">Grup / Hak Akses</label>
                   <div className="grid grid-cols-2 gap-3 p-4 bg-background/50 border border-border rounded-xl">
@@ -427,10 +416,11 @@ export default function UsersPage() {
                           className="flex items-center gap-2.5 cursor-pointer text-sm text-foreground/80 hover:text-foreground select-none"
                         >
                           <input
-                            type="checkbox"
-                            checked={selectedGroupIds.includes(g.id)}
-                            onChange={() => handleCheckboxChange(g.id)}
-                            className="rounded border-border text-primary focus:ring-primary w-4.5 h-4.5 bg-background"
+                            type="radio"
+                            name="userGroup"
+                            checked={selectedGroupId === g.id}
+                            onChange={() => setSelectedGroupId(g.id)}
+                            className="rounded-full border-border text-primary focus:ring-primary w-4.5 h-4.5 bg-background"
                           />
                           <span>{g.name}</span>
                         </label>

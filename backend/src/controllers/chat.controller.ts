@@ -17,10 +17,10 @@ export const chatStream = async (req: AuthRequest, res: Response): Promise<void>
     const queryEmbedding = await generateEmbedding(query);
 
     // 2. Search Vector DB for most relevant chunks
-    const relevantDocs = await queryDocuments(queryEmbedding, 3);
+    const relevantDocs = await queryDocuments(queryEmbedding, 15);
     
-    // Filter out chunks that are not semantically close to the query (cosine distance >= 0.70)
-    const filteredDocs = relevantDocs.filter(doc => doc.distance !== null && doc.distance < 0.70);
+    // Filter out chunks that are not semantically close to the query (cosine distance >= 0.75)
+    const filteredDocs = relevantDocs.filter(doc => doc.distance !== null && doc.distance < 0.75);
     const contextChunks = filteredDocs.map(doc => ({
       content: doc.content as string,
       title: (doc.metadata as any)?.title || 'Dokumen'
