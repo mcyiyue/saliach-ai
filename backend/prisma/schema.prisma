@@ -1,0 +1,78 @@
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
+  password  String      // hashed
+  name      String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  groups    UserGroup[]
+}
+
+model Group {
+  id          Int               @id @default(autoincrement())
+  name        String            @unique // misal: "Admin", "Jemaat", "Moderator"
+  description String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  users       UserGroup[]
+  permissions GroupPermission[]
+}
+
+model UserGroup {
+  userId    Int
+  groupId   Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([userId, groupId])
+}
+
+model Module {
+  id          Int       @id @default(autoincrement())
+  name        String    // misal: "Manajemen User", "Chat", "Upload Dokumen"
+  routePath   String?   // misal: "/admin/users", "/chat"
+  icon        String?   // Nama ikon untuk frontend
+  parentId    Int?
+  
+  parent      Module?   @relation("ModuleHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Module[]  @relation("ModuleHierarchy")
+  
+  permissions GroupPermission[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model GroupPermission {
+  groupId     Int
+  moduleId    Int
+  canRead     Boolean   @default(false)
+  canWrite    Boolean   @default(false)
+
+  group       Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  module      Module    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, moduleId])
+}
+
+model ExternalLink {
+  id          Int      @id @default(autoincrement())
+  title       String
+  url         String   @unique
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
