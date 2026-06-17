@@ -171,9 +171,9 @@ export default function ExternalLinksPage() {
   );
 
   return (
-    <div className="p-8 max-w-6xl mx-auto h-full flex flex-col relative text-foreground">
+    <div className="p-4 pt-20 md:p-8 max-w-6xl mx-auto h-full flex flex-col relative text-foreground">
       {/* Header */}
-      <div className="mb-8 flex flex-col items-start gap-4">
+      <div className="mb-8 flex flex-col items-center md:items-start text-center md:text-left gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Sumber Kajian Eksternal</h1>
           <p className="text-muted-foreground mt-1">Kelola tautan website luar yang diizinkan untuk dirujuk oleh Saliach AI</p>
@@ -190,8 +190,7 @@ export default function ExternalLinksPage() {
       {/* Global Status Message */}
       {status.message && (
         <div className={`mb-6 p-4 rounded-xl border flex items-center justify-between transition-all ${status.type === 'success'
-            ? 'bg-emerald-950/20 border-emerald-900/40 text-emerald-600 dark:text-emerald-400'
-            : 'bg-red-950/20 border-red-900/40 text-red-600 dark:text-red-400'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-900/50 dark:text-emerald-200' : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-900/50 dark:text-red-200'
           }`}>
           <span>{status.message}</span>
           <button onClick={() => setStatus({ type: 'idle', message: '' })} className="hover:opacity-75">
@@ -270,7 +269,7 @@ export default function ExternalLinksPage() {
                         variant="destructive"
                         size="sm"
                         onClick={() => openDeleteModal(link)}
-                        className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 transition-colors text-xs px-3"
+                        className="bg-amber-400 hover:bg-amber-500 text-black dark:bg-amber-400 dark:hover:bg-amber-500 dark:text-black border border-amber-500/80 transition-colors text-xs px-3 font-bold uppercase tracking-wider shadow-sm"
                       >
                         Hapus
                       </Button>
@@ -304,7 +303,7 @@ export default function ExternalLinksPage() {
             <form onSubmit={handleFormSubmit}>
               <div className="p-6 space-y-4">
                 {formError && (
-                  <div className="p-3.5 bg-red-950/20 border border-red-900/40 text-red-400 text-sm rounded-lg">
+                  <div className="p-4 bg-red-50 border border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-900/50 dark:text-red-200 text-sm rounded-xl font-semibold shadow-sm">
                     {formError}
                   </div>
                 )}
@@ -371,7 +370,7 @@ export default function ExternalLinksPage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-card border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-6">
-              <div className="w-12 h-12 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
               </div>
               <h3 className="text-xl font-bold text-foreground mb-2">Hapus Tautan Eksternal?</h3>
@@ -392,7 +391,7 @@ export default function ExternalLinksPage() {
                 type="button"
                 disabled={deleteLoading}
                 onClick={handleConfirmDelete}
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 h-11 rounded-full shadow-md shadow-red-500/10"
+                className="bg-amber-400 hover:bg-amber-500 text-black dark:bg-amber-400 dark:hover:bg-amber-500 dark:text-black font-extrabold tracking-wider uppercase border-2 border-amber-500/80 px-6 h-11 rounded-full shadow-md shadow-amber-500/20"
               >
                 {deleteLoading ? 'Menghapus...' : 'Ya, Hapus'}
               </Button>

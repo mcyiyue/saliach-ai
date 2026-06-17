@@ -201,18 +201,18 @@ export default function PermissionsPage() {
   const activeGroup = groups.find(g => g.id === selectedGroupId);
 
   return (
-    <div className="p-8 max-w-6xl mx-auto h-full flex flex-col relative text-foreground">
+    <div className="p-4 pt-20 md:p-8 max-w-6xl mx-auto h-full flex flex-col relative text-foreground">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 text-center md:text-left flex flex-col items-center md:items-start">
         <h1 className="text-3xl font-bold tracking-tight">Manajemen Hak Akses</h1>
         <p className="text-muted-foreground mt-1">Konfigurasikan matriks hak akses baca/tulis untuk setiap kelompok pengguna</p>
       </div>
 
       {/* Status Alert */}
       {status.message && (
-        <div className={`mb-6 p-4 rounded-xl border flex items-center justify-between transition-all ${status.type === 'success'
-          ? 'bg-emerald-950/20 border-emerald-900/40 text-emerald-600 dark:text-emerald-400'
-          : 'bg-red-950/20 border-red-900/40 text-red-600 dark:text-red-400'
+        <div className={`mb-6 p-4 rounded-xl border flex items-center justify-between transition-all font-semibold shadow-sm ${status.type === 'success'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-900/50 dark:text-emerald-200'
+            : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-900/50 dark:text-red-200'
         }`}>
           <span>{status.message}</span>
           <button onClick={() => setStatus({ type: 'idle', message: '' })} className="hover:opacity-75">

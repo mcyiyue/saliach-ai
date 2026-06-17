@@ -235,15 +235,15 @@ export default function IngestPage() {
     doc.uploadedBy.toLowerCase().includes(searchQuery.toLowerCase())
   );
   return (
-    <div className="p-8 max-w-6xl mx-auto h-full flex flex-col relative text-foreground">
-      <div className="mb-8 space-y-6">
+    <div className="p-4 pt-20 md:p-8 max-w-6xl mx-auto h-full flex flex-col relative text-foreground">
+      <div className="mb-8 flex flex-col items-center md:items-start text-center md:text-left space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Manajemen Database Vektor</h1>
           <p className="text-muted-foreground mt-1">Lakukan ingestion dokumen baru atau kelola data chunks doktrin Monoteisme Alkitabiah</p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex bg-card border border-border p-1 rounded-xl shrink-0 self-start transition-colors duration-300">
+        <div className="flex bg-card border border-border p-1 rounded-xl shrink-0 self-center md:self-start transition-colors duration-300">
           <button
             onClick={() => setActiveTab('create')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'create'
@@ -299,7 +299,7 @@ export default function IngestPage() {
           </div>
 
           {inputMethod === 'text' ? (
-            <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl flex-1 flex flex-col">
+            <form onSubmit={handleSubmit} className="space-y-6 w-full flex-1 flex flex-col">
               <div>
                 <label className="text-sm font-semibold text-foreground/80 block mb-2">Judul Dokumen / Referensi</label>
                 <Input
@@ -323,7 +323,7 @@ export default function IngestPage() {
               </div>
 
               {status.message && (
-                <div className={`p-4 rounded-lg border ${status.type === 'success' ? 'bg-emerald-950/20 border-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-red-950/20 border-red-900/40 text-red-600 dark:text-red-400'
+                <div className={`p-4 rounded-xl border font-medium shadow-sm transition-colors ${status.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-900/50 dark:text-emerald-200' : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-900/50 dark:text-red-200'
                   }`}>
                   {status.message}
                 </div>
@@ -338,7 +338,7 @@ export default function IngestPage() {
               </Button>
             </form>
           ) : (
-            <form onSubmit={handleFileUploadSubmit} className="space-y-6 max-w-4xl">
+            <form onSubmit={handleFileUploadSubmit} className="space-y-6 w-full">
               <div className="flex flex-col">
                 <label className="text-sm font-semibold text-foreground/80 block mb-2 font-medium">Pilih File Dokumen</label>
                 <div 
@@ -390,7 +390,7 @@ export default function IngestPage() {
               </div>
 
               {status.message && (
-                <div className={`p-4 rounded-lg border ${status.type === 'success' ? 'bg-emerald-950/20 border-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-red-950/20 border-red-900/40 text-red-600 dark:text-red-400'
+                <div className={`p-4 rounded-xl border font-medium shadow-sm transition-colors ${status.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-900/50 dark:text-emerald-200' : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-900/50 dark:text-red-200'
                   }`}>
                   {status.message}
                 </div>
@@ -462,7 +462,7 @@ export default function IngestPage() {
                         </button>
                         <button
                           onClick={() => handleDeleteClick(doc)}
-                          className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-500/20 transition-colors cursor-pointer"
+                          className="bg-amber-400 hover:bg-amber-500 text-black dark:bg-amber-400 dark:hover:bg-amber-500 dark:text-black border border-amber-500/80 transition-colors text-xs px-3 py-1.5 font-bold uppercase tracking-wider shadow-sm cursor-pointer rounded-lg"
                         >
                           Hapus
                         </button>
@@ -512,7 +512,7 @@ export default function IngestPage() {
               </div>
 
               {editError && (
-                <div className="bg-red-950/20 border border-red-900/40 text-red-500 p-3 rounded-lg text-sm">
+                <div className="bg-red-50 border border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-900/50 dark:text-red-200 p-3 rounded-xl text-sm font-semibold shadow-sm">
                   {editError}
                 </div>
               )}
@@ -559,7 +559,7 @@ export default function IngestPage() {
               <Button
                 onClick={handleConfirmDelete}
                 disabled={deleteLoading}
-                className="bg-red-600 hover:bg-red-500 text-white"
+                className="bg-amber-400 hover:bg-amber-500 text-black dark:bg-amber-400 dark:hover:bg-amber-500 dark:text-black font-extrabold tracking-wider uppercase border-2 border-amber-500/80 px-6 shadow-md shadow-amber-500/20"
               >
                 {deleteLoading ? 'Menghapus...' : 'Hapus Dokumen'}
               </Button>

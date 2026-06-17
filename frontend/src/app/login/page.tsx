@@ -40,50 +40,64 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden text-foreground transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden text-foreground transition-colors duration-300 px-4">
       {/* Background Decor */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[900px] h-[300px] md:h-[900px] bg-primary/20 rounded-full blur-[140px] pointer-events-none animate-pulse duration-10000" />
 
-      <div className="w-full max-w-md p-8 relative z-10 bg-card/50 backdrop-blur-xl border border-border rounded-2xl shadow-2xl transition-colors duration-300">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+      <div className="w-full max-w-md p-6 md:p-10 relative z-10 bg-card/60 backdrop-blur-2xl border border-white/10 dark:border-white/5 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.1)] shadow-primary/5 transition-all duration-300 animate-in fade-in zoom-in-95 slide-in-from-bottom-8">
+        <div className="text-center mb-8 md:mb-10">
+          <div className="w-16 h-16 md:w-20 md:h-20 bg-primary rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-primary/30 rotate-3 hover:rotate-0 transition-transform duration-300">
+            <svg className="w-8 h-8 md:w-10 md:h-10 text-primary-foreground drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          </div>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-primary tracking-tight">
             Welcome Back
           </h1>
-          <p className="text-muted-foreground text-sm mt-2 font-medium">Saliach AI Knowledge Base</p>
+          <p className="text-muted-foreground text-sm mt-3 font-medium tracking-wide">Saliach AI Knowledge Base</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="text-sm font-medium text-foreground/80 block mb-2">Email Address</label>
+        <form onSubmit={handleLogin} className="space-y-5 md:space-y-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider pl-1">Email Address</label>
             <Input 
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-primary h-12"
+              className="bg-background/40 backdrop-blur-sm border-white/10 text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary focus-visible:ring-2 focus-visible:border-transparent h-12 md:h-14 rounded-2xl shadow-inner transition-all hover:bg-background/60"
               placeholder="admin@gereja.com"
               required
             />
           </div>
-          <div>
-            <label className="text-sm font-medium text-foreground/80 block mb-2">Password</label>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider pl-1">Password</label>
             <Input 
               type="password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-background/50 border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-primary h-12"
+              className="bg-background/40 backdrop-blur-sm border-white/10 text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary focus-visible:ring-2 focus-visible:border-transparent h-12 md:h-14 rounded-2xl shadow-inner transition-all hover:bg-background/60"
               placeholder="••••••••"
               required
             />
           </div>
 
-          {error && <div className="text-red-500 text-sm p-3 bg-red-500/10 rounded-lg border border-red-500/20 font-medium">{error}</div>}
+          {error && <div className="text-red-800 dark:text-red-200 text-sm p-4 bg-red-50 dark:bg-red-950/50 rounded-2xl border border-red-200 dark:border-red-900/50 font-semibold animate-in shake shadow-sm">{error}</div>}
 
           <Button 
             type="submit" 
             disabled={loading}
-            className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base transition-colors"
+            className="w-full h-12 md:h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base md:text-lg transition-all shadow-xl shadow-primary/25 active:scale-95 group relative overflow-hidden mt-4"
           >
-            {loading ? 'Authenticating...' : 'Sign In'}
+            {/* Shimmer effect */}
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer" />
+            
+            {loading ? (
+              <span className="flex items-center justify-center gap-3">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Authenticating
+              </span>
+            ) : 'Sign In'}
           </Button>
         </form>
       </div>
