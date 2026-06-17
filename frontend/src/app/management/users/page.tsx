@@ -64,7 +64,7 @@ export default function UsersPage() {
     setLoading(true);
     try {
       // Fetch users
-      const usersRes = await fetch('http://localhost:4000/api/users', {
+      const usersRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (usersRes.ok) {
@@ -73,7 +73,7 @@ export default function UsersPage() {
       }
 
       // Fetch groups
-      const groupsRes = await fetch('http://localhost:4000/api/groups', {
+      const groupsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/groups`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (groupsRes.ok) {
@@ -129,8 +129,8 @@ export default function UsersPage() {
     setStatus({ type: 'idle', message: '' });
 
     const apiUrl = modalMode === 'create'
-      ? 'http://localhost:4000/api/users'
-      : `http://localhost:4000/api/users/${selectedId}`;
+      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/users`
+      : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/users/${selectedId}`;
 
     const method = modalMode === 'create' ? 'POST' : 'PUT';
 
@@ -186,7 +186,7 @@ export default function UsersPage() {
 
     setDeleteLoading(true);
     try {
-      const res = await fetch(`http://localhost:4000/api/users/${userToDelete.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/users/${userToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

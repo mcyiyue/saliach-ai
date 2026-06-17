@@ -37,7 +37,7 @@ export default function GroupsPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/api/groups', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/groups`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -87,8 +87,8 @@ export default function GroupsPage() {
     setStatus({ type: 'idle', message: '' });
 
     const apiUrl = modalMode === 'create'
-      ? 'http://localhost:4000/api/groups'
-      : `http://localhost:4000/api/groups/${selectedId}`;
+      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/groups`
+      : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/groups/${selectedId}`;
 
     const method = modalMode === 'create' ? 'POST' : 'PUT';
 
@@ -134,7 +134,7 @@ export default function GroupsPage() {
 
     setDeleteLoading(true);
     try {
-      const res = await fetch(`http://localhost:4000/api/groups/${groupToDelete.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/groups/${groupToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

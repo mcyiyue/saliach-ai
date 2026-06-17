@@ -48,7 +48,7 @@ export default function IngestPage() {
 
     setListLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/api/ingest', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/ingest`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -79,7 +79,7 @@ export default function IngestPage() {
     setStatus({ type: 'idle', message: '' });
 
     try {
-      const res = await fetch('http://localhost:4000/api/ingest', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/ingest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export default function IngestPage() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const res = await fetch('http://localhost:4000/api/ingest/upload', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/ingest/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -164,7 +164,7 @@ export default function IngestPage() {
     setEditError('');
 
     try {
-      const res = await fetch('http://localhost:4000/api/ingest', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/ingest`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -208,7 +208,7 @@ export default function IngestPage() {
     setDeleteLoading(true);
 
     try {
-      const res = await fetch('http://localhost:4000/api/ingest', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/ingest`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

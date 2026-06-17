@@ -40,7 +40,7 @@ export default function ExternalLinksPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/api/external-links', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/external-links`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -92,8 +92,8 @@ export default function ExternalLinksPage() {
     setStatus({ type: 'idle', message: '' });
 
     const apiUrl = modalMode === 'create'
-      ? 'http://localhost:4000/api/external-links'
-      : `http://localhost:4000/api/external-links/${selectedId}`;
+      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/external-links`
+      : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/external-links/${selectedId}`;
 
     const method = modalMode === 'create' ? 'POST' : 'PUT';
 
@@ -139,7 +139,7 @@ export default function ExternalLinksPage() {
 
     setDeleteLoading(true);
     try {
-      const res = await fetch(`http://localhost:4000/api/external-links/${linkToDelete.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/external-links/${linkToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

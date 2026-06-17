@@ -43,7 +43,7 @@ export default function PermissionsPage() {
       setLoading(true);
       try {
         // Fetch groups
-        const groupsRes = await fetch('http://localhost:4000/api/groups', {
+        const groupsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/groups`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (groupsRes.ok) {
@@ -55,7 +55,7 @@ export default function PermissionsPage() {
         }
 
         // Fetch modules
-        const modulesRes = await fetch('http://localhost:4000/api/permissions/modules', {
+        const modulesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/permissions/modules`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (modulesRes.ok) {
@@ -81,7 +81,7 @@ export default function PermissionsPage() {
       if (!token) return;
 
       try {
-        const res = await fetch(`http://localhost:4000/api/permissions/${selectedGroupId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/permissions/${selectedGroupId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -160,7 +160,7 @@ export default function PermissionsPage() {
     }));
 
     try {
-      const res = await fetch(`http://localhost:4000/api/permissions/${selectedGroupId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/permissions/${selectedGroupId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

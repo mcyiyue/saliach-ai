@@ -51,7 +51,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:4000/api/chat/stream', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
