@@ -39,3 +39,6 @@ yarn-error.log*
 *.sln
 *.sw?
 .DS_Store
+
+# Database dumps
+dump.sql
