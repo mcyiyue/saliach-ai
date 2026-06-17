@@ -7,26 +7,44 @@ import { storeDocuments, getAllDocuments, deleteDocumentsByTitle } from '../serv
 import crypto from 'crypto';
 
 /**
- * Basic text chunking function by paragraphs.
+ * Improved text chunking function with larger size, overlap, and smart splitting
  */
-const chunkText = (text: string, maxChunkLength: number = 1000): string[] => {
-  const paragraphs = text.split(/\n\s*\n/);
+const chunkText = (text: string, maxChunkLength: number = 2500, overlapLength: number = 500): string[] => {
+  const cleanText = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n');
   const chunks: string[] = [];
-  
-  for (const p of paragraphs) {
-    const trimmed = p.trim();
-    if (trimmed.length > 0) {
-      if (trimmed.length <= maxChunkLength) {
-        chunks.push(trimmed);
-      } else {
-        // Potong paragraf yang sangat panjang agar tidak melampaui batas token OpenAI
-        for (let i = 0; i < trimmed.length; i += maxChunkLength) {
-          chunks.push(trimmed.slice(i, i + maxChunkLength));
-        }
+  let startIndex = 0;
+
+  while (startIndex < cleanText.length) {
+    let endIndex = startIndex + maxChunkLength;
+
+    if (endIndex < cleanText.length) {
+      const lastPeriod = cleanText.lastIndexOf('.', endIndex);
+      const lastNewline = cleanText.lastIndexOf('\n', endIndex);
+      
+      let bestSplit = Math.max(lastPeriod, lastNewline);
+      
+      if (bestSplit <= startIndex + (maxChunkLength / 2)) {
+        bestSplit = cleanText.lastIndexOf(' ', endIndex);
+      }
+      
+      if (bestSplit > startIndex) {
+        endIndex = bestSplit + 1;
       }
     }
+
+    const chunk = cleanText.substring(startIndex, endIndex).trim();
+    
+    if (chunk.length > 150) {
+      chunks.push(chunk);
+    }
+
+    let nextStartIndex = endIndex - overlapLength;
+    if (nextStartIndex <= startIndex) {
+      nextStartIndex = endIndex;
+    }
+    startIndex = nextStartIndex;
   }
-  
+
   return chunks;
 };
 

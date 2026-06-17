@@ -8,9 +8,7 @@ services:
       - "8000:8000"
     volumes:
       # Data akan disimpan secara permanen di folder chroma_data lokal
-      - ./chroma_data:/chroma/chroma
+      - ./chroma_data:/data
     environment:
-      - IS_PERSISTENT=TRUE
-      - PERSIST_DIRECTORY=/chroma/chroma
       - ALLOW_RESET=TRUE
     restart: unless-stopped

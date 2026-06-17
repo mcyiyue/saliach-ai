@@ -1,7 +1,7 @@
 import { ChromaClient, Collection } from 'chromadb';
 
 const client = new ChromaClient({
-  path: 'http://localhost:8000'
+  path: 'http://127.0.0.1:8000'
 });
 
 const COLLECTION_NAME = 'doctrine_knowledge_base';
