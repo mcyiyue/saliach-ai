@@ -183,7 +183,7 @@ export default function ChatPage() {
       <div className="absolute bottom-[-10%] right-[-10%] w-64 md:w-96 h-64 md:h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Header */}
-      <div className="p-4 pt-5 md:p-6 border-b border-border/50 bg-card/60 backdrop-blur-xl sticky top-0 z-20 shadow-sm transition-all duration-300 flex flex-col gap-2 md:gap-3 items-center md:items-start justify-center min-h-[5rem] text-center md:text-left">
+      <div className="p-4 pt-20 md:p-6 md:pt-6 border-b border-border/50 bg-card/60 backdrop-blur-xl sticky top-0 z-20 shadow-sm transition-all duration-300 flex flex-col gap-2 md:gap-3 items-center md:items-start justify-center min-h-[5rem] text-center md:text-left">
         <h2 className="text-xl md:text-2xl font-bold text-primary hover:scale-[1.02] transition-transform origin-center md:origin-left cursor-default">
           Monoteisme Alkitabiah Bot
         </h2>
