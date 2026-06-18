@@ -14,13 +14,12 @@ const CopyButton = ({ content, isUser }: { content: string, isUser: boolean }) =
   };
 
   return (
-    <button 
+    <button
       onClick={handleCopy}
-      className={`p-1.5 md:p-2 rounded-lg transition-all flex items-center justify-center shadow-sm ${
-        isUser 
-          ? 'bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground/80 hover:text-primary-foreground' 
-          : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50'
-      }`}
+      className={`p-1.5 md:p-2 rounded-lg transition-all flex items-center justify-center shadow-sm ${isUser
+        ? 'bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground/80 hover:text-primary-foreground'
+        : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50'
+        }`}
       title="Salin teks"
     >
       {copied ? (
@@ -78,31 +77,29 @@ const FeedbackButtons = ({ message, previousUserMessage }: { message: any, previ
     <div className="flex flex-col gap-2 mt-2 w-full max-w-sm">
       <div className="flex items-center gap-2">
         <CopyButton content={message.content} isUser={false} />
-        
+
         <div className="h-4 w-px bg-border/50 mx-1"></div>
-        
-        <button 
+
+        <button
           onClick={() => handleRate(1)}
           disabled={!!rated}
-          className={`p-1.5 md:p-2 rounded-lg transition-all flex items-center justify-center shadow-sm border border-border/50 ${
-            rated === 'up' ? 'bg-green-500/20 text-green-600 border-green-500/30' : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
-          }`}
+          className={`p-1.5 md:p-2 rounded-lg transition-all flex items-center justify-center shadow-sm border border-border/50 ${rated === 'up' ? 'bg-green-500/20 text-green-600 border-green-500/30' : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
+            }`}
           title="Jawaban Bagus"
         >
           <svg className="w-4 h-4" fill={rated === 'up' ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
         </button>
-        
-        <button 
+
+        <button
           onClick={() => handleRate(-1)}
           disabled={!!rated && rated !== 'down'}
-          className={`p-1.5 md:p-2 rounded-lg transition-all flex items-center justify-center shadow-sm border border-border/50 ${
-            rated === 'down' ? 'bg-red-500/20 text-red-600 border-red-500/30' : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
-          }`}
+          className={`p-1.5 md:p-2 rounded-lg transition-all flex items-center justify-center shadow-sm border border-border/50 ${rated === 'down' ? 'bg-red-500/20 text-red-600 border-red-500/30' : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
+            }`}
           title="Jawaban Buruk"
         >
           <svg className="w-4 h-4" fill={rated === 'down' ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" /></svg>
         </button>
-        
+
         {rated && !showComment && (
           <span className="text-xs text-muted-foreground ml-2 animate-in fade-in">Terima kasih atas masukannya!</span>
         )}
@@ -180,7 +177,7 @@ export default function ChatPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           query: userQuery,
           history: messages.map(msg => ({ role: msg.role, content: msg.content }))
         })
@@ -197,21 +194,21 @@ export default function ChatPage() {
       setMessages(prev => [...prev, { role: 'ai', content: '' }]);
 
       let buffer = '';
-      
+
       while (reader) {
         const { value, done } = await reader.read();
         if (done) break;
-        
+
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n\n');
-        
+
         // Keep the last incomplete part in the buffer
         buffer = lines.pop() || '';
-        
+
         for (const line of lines) {
           const trimmedLine = line.trim();
           if (trimmedLine === '') continue;
-          
+
           if (trimmedLine.startsWith('event: citations')) {
             const dataStr = trimmedLine.replace(/^event: citations\r?\ndata:\s*/, '');
             try {
@@ -228,7 +225,7 @@ export default function ChatPage() {
             } catch (e) {
               console.error('Failed to parse citations:', e);
             }
-          } 
+          }
           else if (trimmedLine.startsWith('data: ')) {
             const dataStr = trimmedLine.replace(/^data:\s*/, '');
             if (dataStr === '{}') continue; // Skip event: done data: {}
@@ -263,7 +260,7 @@ export default function ChatPage() {
     return (
       <div className="flex flex-col h-full bg-background transition-colors duration-300">
         <div className="p-6 border-b border-border bg-card/85 backdrop-blur-md sticky top-0 z-10 shadow-sm transition-colors duration-300">
-          <h2 className="text-2xl font-bold text-foreground">Monoteisme Alkitabiah Bot</h2>
+          <h2 className="text-2xl font-bold text-foreground">Chat Monoteisme Alkitabiah</h2>
         </div>
         <div className="flex-1 flex items-center justify-center text-muted-foreground/80">
           Memuat riwayat chat...
@@ -281,16 +278,16 @@ export default function ChatPage() {
       {/* Header */}
       <div className="p-4 pt-20 md:p-6 md:pt-6 border-b border-border/50 bg-card/60 backdrop-blur-xl sticky top-0 z-20 shadow-sm transition-all duration-300 flex flex-col gap-2 md:gap-3 items-center md:items-start justify-center min-h-[5rem] text-center md:text-left">
         <h2 className="text-xl md:text-2xl font-bold text-primary hover:scale-[1.02] transition-transform origin-center md:origin-left cursor-default">
-          Monoteisme Alkitabiah Bot
+          Chat Monoteisme Alkitabiah
         </h2>
         {messages.length > 0 && (
-          <Button 
+          <Button
             onClick={() => {
               if (confirm('Apakah Anda yakin ingin menghapus semua riwayat chat?')) {
                 setMessages([]);
                 localStorage.removeItem('saliach_chat_history');
               }
-            }} 
+            }}
             className="text-[10px] md:text-xs bg-amber-400 hover:bg-amber-500 text-black dark:bg-amber-400 dark:hover:bg-amber-500 dark:text-black border-2 border-amber-500/80 font-extrabold tracking-wider uppercase rounded-full px-5 py-1.5 h-auto transition-all duration-300 active:scale-95 shadow-md shadow-amber-500/20"
           >
             Hapus Riwayat
@@ -306,7 +303,7 @@ export default function ChatPage() {
               <div className="w-16 h-16 md:w-20 md:h-20 bg-card/50 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center mb-4 md:mb-6 transition-all shadow-xl shadow-primary/5 hover:scale-110 hover:border-primary/30 duration-300">
                 <svg className="w-8 h-8 md:w-10 md:h-10 text-primary drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
               </div>
-              <p className="font-medium text-base md:text-lg tracking-wide">Mulai percakapan dengan AI Doktrin</p>
+              <p className="font-medium text-base md:text-lg tracking-wide">Mulai percakapan dengan Saliach-AI</p>
             </div>
           ) : (
             messages.map((msg, idx) => (
@@ -326,9 +323,9 @@ export default function ChatPage() {
                     {msg.role === 'user' ? (
                       <CopyButton content={msg.content} isUser={true} />
                     ) : (
-                      <FeedbackButtons 
-                        message={msg} 
-                        previousUserMessage={idx > 0 && messages[idx - 1].role === 'user' ? messages[idx - 1].content : undefined} 
+                      <FeedbackButtons
+                        message={msg}
+                        previousUserMessage={idx > 0 && messages[idx - 1].role === 'user' ? messages[idx - 1].content : undefined}
                       />
                     )}
                   </div>
@@ -366,6 +363,9 @@ export default function ChatPage() {
             ) : 'Kirim'}
           </Button>
         </form>
+        <div className="mt-3 text-center text-[10px] md:text-xs font-medium tracking-wide text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors cursor-default">
+          Jo Immanuel Powered by Antigravity
+        </div>
       </div>
     </div>
   );

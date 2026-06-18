@@ -40,7 +40,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden text-foreground transition-colors duration-300 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden text-foreground transition-colors duration-300 px-4">
       {/* Background Decor */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[900px] h-[300px] md:h-[900px] bg-primary/20 rounded-full blur-[140px] pointer-events-none animate-pulse duration-10000" />
 
@@ -50,27 +50,27 @@ export default function LoginPage() {
             <svg className="w-8 h-8 md:w-10 md:h-10 text-primary-foreground drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-primary tracking-tight">
-            Welcome Back
+            SALIACH-AI
           </h1>
-          <p className="text-muted-foreground text-sm mt-3 font-medium tracking-wide">Saliach AI Knowledge Base</p>
+          <p className="text-muted-foreground text-sm mt-3 font-medium tracking-wide">Mari Belajar Monoteisme Yang Alkitabiah</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5 md:space-y-6">
           <div className="space-y-2">
             <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider pl-1">Email Address</label>
-            <Input 
-              type="email" 
+            <Input
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-background/40 backdrop-blur-sm border-white/10 text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary focus-visible:ring-2 focus-visible:border-transparent h-12 md:h-14 rounded-2xl shadow-inner transition-all hover:bg-background/60"
-              placeholder="admin@gereja.com"
+              placeholder="Your Email"
               required
             />
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider pl-1">Password</label>
-            <Input 
-              type="password" 
+            <Input
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="bg-background/40 backdrop-blur-sm border-white/10 text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary focus-visible:ring-2 focus-visible:border-transparent h-12 md:h-14 rounded-2xl shadow-inner transition-all hover:bg-background/60"
@@ -81,14 +81,14 @@ export default function LoginPage() {
 
           {error && <div className="text-red-800 dark:text-red-200 text-sm p-4 bg-red-50 dark:bg-red-950/50 rounded-2xl border border-red-200 dark:border-red-900/50 font-semibold animate-in shake shadow-sm">{error}</div>}
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={loading}
             className="w-full h-12 md:h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base md:text-lg transition-all shadow-xl shadow-primary/25 active:scale-95 group relative overflow-hidden mt-4"
           >
             {/* Shimmer effect */}
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer" />
-            
+
             {loading ? (
               <span className="flex items-center justify-center gap-3">
                 <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
@@ -100,6 +100,10 @@ export default function LoginPage() {
             ) : 'Sign In'}
           </Button>
         </form>
+      </div>
+
+      <div className="mt-8 relative z-10 text-xs font-medium tracking-wide text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors cursor-default">
+        Jo Immanuel Powered by Antigravity
       </div>
     </div>
   );
