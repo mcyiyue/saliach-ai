@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from './ui/button';
-import { 
-  MessageSquare, Settings, Users, Database, 
+import {
+  MessageSquare, Settings, Users, Database,
   Folder, Shield, Link as LinkIcon, BookOpen,
   LayoutDashboard
 } from 'lucide-react';
@@ -28,7 +28,7 @@ const getModuleIcon = (name: string) => {
   if (lowerName.includes('izin') || lowerName.includes('permission')) return <Shield className="w-5 h-5 mr-3 opacity-90" />;
   if (lowerName.includes('teologi') || lowerName.includes('belajar')) return <BookOpen className="w-5 h-5 mr-3 opacity-90" />;
   if (lowerName.includes('dashboard') || lowerName.includes('beranda')) return <LayoutDashboard className="w-5 h-5 mr-3 opacity-90" />;
-  
+
   // Default icon for top-level module
   return <Folder className="w-5 h-5 mr-3 opacity-90" />;
 };
@@ -161,7 +161,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Hamburger Button */}
-      <button 
+      <button
         onClick={() => setIsMobileOpen(true)}
         className="md:hidden fixed top-5 left-4 z-40 p-2.5 rounded-xl bg-card border border-border text-foreground hover:bg-secondary transition-all shadow-md active:scale-95"
       >
@@ -172,7 +172,7 @@ export default function Sidebar() {
 
       {/* Mobile Backdrop overlay */}
       {isMobileOpen && (
-        <div 
+        <div
           className="md:hidden fixed inset-0 bg-background/80 backdrop-blur-sm z-40 animate-in fade-in duration-300"
           onClick={() => setIsMobileOpen(false)}
         />
@@ -180,9 +180,9 @@ export default function Sidebar() {
 
       {/* Sidebar Container */}
       <div className={`fixed inset-y-0 left-0 md:relative z-50 w-64 bg-sidebar/95 md:bg-sidebar/80 backdrop-blur-xl text-sidebar-foreground flex flex-col h-[100dvh] border-r border-white/5 dark:border-white/5 shrink-0 shadow-2xl md:shadow-xl transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-        
+
         {/* Mobile Close Button */}
-        <button 
+        <button
           onClick={() => setIsMobileOpen(false)}
           className="md:hidden absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground transition-colors"
         >
@@ -193,7 +193,7 @@ export default function Sidebar() {
 
         <div className="p-6 border-b border-sidebar-border/50 pt-8 md:pt-6">
           <h1 className="text-xl font-bold text-primary hover:scale-105 transition-transform duration-300 origin-left cursor-default">
-            Saliach AI
+            Saliach-ai.xyz
           </h1>
         </div>
 
@@ -209,7 +209,7 @@ export default function Sidebar() {
           {/* Logout */}
           <Button
             variant="destructive"
-            className="w-full justify-start bg-red-800 text-white hover:bg-red-900 shadow-md hover:shadow-red-900/20 font-semibold h-10 transition-all duration-300 active:scale-95"
+            className="w-full justify-start bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:text-white dark:hover:bg-red-700 shadow-md hover:shadow-red-900/20 font-semibold h-10 transition-all duration-300 active:scale-95"
             onClick={handleLogout}
           >
             Logout
