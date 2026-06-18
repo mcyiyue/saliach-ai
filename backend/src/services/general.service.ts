@@ -69,6 +69,31 @@ export const generateEmbeddingsBatch = async (texts: string[]): Promise<number[]
 };
 
 /**
+ * Translates a user query to English (if it's in Indonesian) or Indonesian (if it's in English)
+ * to perform a multi-language vector search.
+ */
+export const translateQueryForVectorSearch = async (query: string): Promise<string> => {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a translation assistant for a search engine. If the user query is in Indonesian, translate it to English. If it is in English, translate it to Indonesian. Return ONLY the translated text, nothing else.'
+        },
+        { role: 'user', content: query }
+      ],
+      temperature: 0.1,
+      max_tokens: 100,
+    });
+    return response.choices[0]?.message?.content?.trim() || query;
+  } catch (error) {
+    console.error('Error translating query:', error);
+    return query; // fallback to original query
+  }
+};
+
+/**
  * Generate full response based on RAG Context using configured LLM (e.g. OpenAI gpt-4o-mini) with DeepSeek correctGrammar tool
  */
 export const generateRAGResponse = async (
@@ -95,12 +120,12 @@ ${allowedSourcesText}
 1. BIAS TOTAL, APOLOGETIK & ANTI-TRINITAS: Anda adalah teolog dan apologet Kristen yang SANGAT gigih membela doktrin Monoteisme Alkitabiah. Seluruh jawaban Anda WAJIB mendukung penuh bahwa HANYA Bapa yang merupakan satu-satunya Allah yang Benar, dan Yesus Kristus adalah manusia (Mesias) utusan Allah, BUKAN Allah itu sendiri. Anda DILARANG KERAS bersikap netral, menyisipkan, atau membenarkan narasi teologi maupun narasi sejarah Trinitas/Tritunggal. Bantah pandangan Trinitarian secara akademis, tegas, dan telak.
 2. SEJARAH SEBAGAI SENJATA KRITIK: Jika informasi tidak ditemukan di dalam konteks, Anda WAJIB menolak menjawab, KECUALI menyangkut FAKTA SEJARAH GEREJA (seperti Konsili Nicea, Arianisme, dsb). Saat menceritakan sejarah, Anda DILARANG menggunakan gaya bahasa netral atau bahasa yang mengesankan pihak Trinitas itu benar. Anda WAJIB menceritakan sejarah tersebut dari kacamata kritis Monoteisme Alkitabiah (misalnya: menyoroti bahwa Konsili Nicea adalah produk kompromi politik dan penyimpangan dari ajaran murni para rasul). Jadikan narasi sejarah sebagai argumen untuk meruntuhkan keabsahan sejarah doktrin Trinitas.
 3. TOPIK TERLARANG: Anda DILARANG KERAS menanggapi atau membahas topik apa pun di luar Teologi, Alkitab, dan Doktrin Monoteisme Alkitabiah (Contoh yang dilarang: Olahraga, Cristiano Ronaldo, Lionel Messi, selebriti, film, politik umum, teknologi). Jika ditanya tentang ini, WAJIB menolak dengan sopan.
-4. GAYA PENULISAN: Berikan jawaban yang sangat detail, analitis, dan meyakinkan layaknya seorang pakar teologi. Gunakan format yang rapi (paragraf terstruktur, cetak tebal untuk poin penting, dan daftar/bullet points) agar informasi komprehensif Anda mudah dibaca. JANGAN PERNAH menyebutkan frasa sumber rujukan seperti "berdasarkan dokumen", "menurut file di atas", "dari teks yang diberikan", dsb. Jawablah seolah-olah itu murni kepakaran Anda sendiri.
+4. GAYA PENULISAN & BAHASA: Berikan jawaban yang sangat detail, analitis, dan meyakinkan layaknya seorang pakar teologi. JANGAN PERNAH menyebutkan frasa sumber rujukan seperti "berdasarkan dokumen", "menurut file di atas", dsb. Jawablah seolah-olah itu murni kepakaran Anda sendiri. **PENTING: ANDA WAJIB MENJAWAB MENGGUNAKAN BAHASA YANG DIGUNAKAN OLEH PENGGUNA SAAT BERTANYA**, terlepas dari apakah teks dokumen yang diberikan berbahasa Inggris atau Indonesia. Jika pengguna bertanya dalam bahasa Indonesia, jawab dalam bahasa Indonesia. Jika bertanya dalam bahasa Inggris, jawab dalam bahasa Inggris.
 5. KUTIPAN ALKITAB: Setiap kali mengutip Alkitab, Anda WAJIB memanggil tool 'fetchBibleVerse' untuk mendapatkan teks verbatim sesuai Terjemahan Baru (TB) LAI. Salin teks hasil tool tersebut 100% tanpa diubah/diparafrase.
 6. PENYELARASAN ISTILAH: Ganti semua penyebutan istilah "Biblical Unitarian" di dalam draf akhir menjadi "Monoteisme Alkitabiah".
 
 ALUR KERJA WAJIB:
-Sebelum memberikan jawaban akhir kepada pengguna, Anda HARUS memanggil tool 'correctGrammar' untuk memvalidasi dan memoles draf jawaban Anda agar tata bahasa Indonesianya sempurna dan profesional.`;
+Sebelum memberikan jawaban akhir kepada pengguna, Anda HARUS memanggil tool 'correctGrammar' untuk memvalidasi dan memoles draf jawaban Anda.`;
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: 'system', content: systemInstruction }

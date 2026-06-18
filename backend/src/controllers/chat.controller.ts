@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/rbac.middleware';
-import { generateEmbedding, generateRAGResponse } from '../services/general.service';
+import { generateEmbedding, generateRAGResponse, translateQueryForVectorSearch } from '../services/general.service';
 import { queryDocuments } from '../services/chroma.service';
 import { prisma } from '../utils/prisma';
 
@@ -13,14 +13,41 @@ export const chatStream = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // 1. Embed the user's query
-    const queryEmbedding = await generateEmbedding(query);
+    // 1. Translate query for Multi-lingual Vector Search
+    const translatedQuery = await translateQueryForVectorSearch(query);
 
-    // 2. Search Vector DB for most relevant chunks
-    const relevantDocs = await queryDocuments(queryEmbedding, 15);
+    // 2. Embed both original query and translated query
+    const [queryEmbedding, translatedEmbedding] = await Promise.all([
+      generateEmbedding(query),
+      generateEmbedding(translatedQuery)
+    ]);
+
+    // 3. Search Vector DB for most relevant chunks for BOTH queries
+    const [originalDocs, translatedDocs] = await Promise.all([
+      queryDocuments(queryEmbedding, 15),
+      queryDocuments(translatedEmbedding, 15)
+    ]);
     
-    // Filter out chunks that are not semantically close to the query (cosine distance >= 0.75)
-    const filteredDocs = relevantDocs.filter(doc => doc.distance !== null && doc.distance < 0.75);
+    // Merge, deduplicate by chunk title + index (to avoid duplicate context), and sort
+    const allDocs = [...originalDocs, ...translatedDocs];
+    const uniqueDocsMap = new Map<string, any>();
+    
+    allDocs.forEach(doc => {
+      // Filter out chunks that are not semantically close (cosine distance >= 0.75)
+      if (doc.distance !== null && doc.distance < 0.75) {
+        const meta = doc.metadata as any;
+        const uniqueKey = `${meta?.title || 'Unknown'}-${meta?.chunkIndex || '0'}`;
+        
+        if (!uniqueDocsMap.has(uniqueKey) || doc.distance < uniqueDocsMap.get(uniqueKey)!.distance) {
+          uniqueDocsMap.set(uniqueKey, doc);
+        }
+      }
+    });
+
+    const filteredDocs = Array.from(uniqueDocsMap.values())
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 15); // Take top 15 overall closest docs
+
     const contextChunks = filteredDocs.map(doc => ({
       content: doc.content as string,
       title: (doc.metadata as any)?.title || 'Dokumen'
