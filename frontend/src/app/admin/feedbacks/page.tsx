@@ -109,7 +109,7 @@ export default function FeedbacksPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto flex flex-col h-[100dvh]">
+    <div className="p-6 md:p-8 max-w-7xl mx-auto flex flex-col h-full">
       <div className="flex justify-between items-center mb-8 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Evaluasi AI (RLHF)</h1>
