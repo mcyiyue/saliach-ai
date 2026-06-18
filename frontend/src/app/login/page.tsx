@@ -55,6 +55,15 @@ export default function LoginPage() {
           <p className="text-muted-foreground text-sm mt-3 font-medium tracking-wide">Mari Belajar Monoteisme Yang Alkitabiah</p>
         </div>
 
+        <div className="mb-6 p-3.5 bg-primary/10 border border-primary/20 rounded-xl text-center shadow-inner animate-in fade-in duration-500 delay-150">
+          <p className="text-xs text-primary/80 font-semibold uppercase tracking-wider mb-1">Demo Account</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-sm font-bold text-primary">
+            <span>user: guest@saliach-ai.xyz</span>
+            <span className="hidden sm:inline opacity-30">|</span>
+            <span>pass: 12345</span>
+          </div>
+        </div>
+
         <form onSubmit={handleLogin} className="space-y-5 md:space-y-6">
           <div className="space-y-2">
             <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider pl-1">Email Address</label>
