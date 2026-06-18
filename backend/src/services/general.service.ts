@@ -74,21 +74,20 @@ export const generateEmbeddingsBatch = async (texts: string[]): Promise<number[]
  */
 export const translateQueryForVectorSearch = async (query: string): Promise<string> => {
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const response = await deepseek.chat.completions.create({
+      model: 'deepseek-chat',
       messages: [
         {
           role: 'system',
-          content: 'You are a translation assistant for a search engine. If the user query is in Indonesian, translate it to English. If it is in English, translate it to Indonesian. Return ONLY the translated text, nothing else.'
+          content: 'You are a translation assistant for a search engine. Translate the user query to English. If it is already in English, just return the exact same query. Return ONLY the translated text, nothing else. Do not add quotes or explanations.'
         },
         { role: 'user', content: query }
       ],
       temperature: 0.1,
-      max_tokens: 100,
     });
     return response.choices[0]?.message?.content?.trim() || query;
   } catch (error) {
-    console.error('Error translating query:', error);
+    console.error('Error translating query with DeepSeek:', error);
     return query; // fallback to original query
   }
 };
