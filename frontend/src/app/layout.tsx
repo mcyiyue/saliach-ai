@@ -41,7 +41,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-background text-foreground antialiased min-h-screen flex selection:bg-primary/30 transition-colors duration-300`}>
+      <body className={`${inter.className} bg-background text-foreground antialiased min-h-[100dvh] flex selection:bg-primary/30 transition-colors duration-300`}>
         {/* Floating Dark Mode Toggle in Top Right Corner */}
         <button 
           onClick={toggleTheme}
@@ -58,7 +58,7 @@ export default function RootLayout({
         </button>
 
         {!isLoginPage && <Sidebar />}
-        <main className={`flex-1 overflow-y-auto bg-background/50 h-screen transition-colors duration-300`}>
+        <main className={`flex-1 overflow-y-auto bg-background/50 h-[100dvh] transition-colors duration-300`}>
           {children}
         </main>
       </body>
