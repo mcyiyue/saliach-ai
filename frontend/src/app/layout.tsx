@@ -41,7 +41,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-background text-foreground antialiased min-h-[100dvh] flex selection:bg-primary/30 transition-colors duration-300`}>
+      <body className={`${inter.className} bg-background text-foreground antialiased h-[100dvh] overflow-hidden flex selection:bg-primary/30 transition-colors duration-300`}>
         {/* Floating Dark Mode Toggle in Top Right Corner */}
         <button 
           onClick={toggleTheme}
