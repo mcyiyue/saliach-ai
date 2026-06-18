@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { submitFeedback, getFeedbacks, resolveFeedback } from '../controllers/feedback.controller';
+import { submitFeedback, getFeedbacks, resolveFeedback, deleteFeedback } from '../controllers/feedback.controller';
 import { authenticate, requirePermission } from '../middleware/rbac.middleware';
 
 const router = Router();
@@ -12,5 +12,6 @@ router.post('/', authenticate, submitFeedback);
 // We require read/write permission to the /admin/feedbacks module (we will define this module)
 router.get('/', authenticate, requirePermission('/admin/feedbacks', 'read'), getFeedbacks);
 router.put('/:id/resolve', authenticate, requirePermission('/admin/feedbacks', 'write'), resolveFeedback);
+router.delete('/:id', authenticate, requirePermission('/admin/feedbacks', 'write'), deleteFeedback);
 
 export default router;

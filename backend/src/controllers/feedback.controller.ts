@@ -60,3 +60,18 @@ export const resolveFeedback = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const deleteFeedback = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.chatFeedback.delete({
+      where: { id: Number(id) }
+    });
+
+    res.json({ message: 'Feedback deleted successfully' });
+  } catch (error) {
+    console.error('Delete feedback error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

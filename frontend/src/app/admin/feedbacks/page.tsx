@@ -78,6 +78,32 @@ export default function FeedbacksPage() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus evaluasi ini?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/feedbacks/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        setFeedbacks(prev => prev.filter(f => f.id !== id));
+        if (selectedFeedback?.id === id) {
+          setSelectedFeedback(null);
+        }
+      } else {
+        alert('Gagal menghapus evaluasi');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Terjadi kesalahan saat menghapus');
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-muted-foreground animate-pulse">Memuat data evaluasi...</div>;
   }
@@ -192,14 +218,20 @@ export default function FeedbacksPage() {
               </div>
             </div>
 
-            <div className="p-4 border-t border-border/50 bg-muted/30">
+            <div className="p-4 border-t border-border/50 bg-muted/30 flex flex-col gap-3">
               <Button 
-                className="w-full h-12 text-sm font-bold shadow-md" 
+                className="w-full h-11 text-sm font-bold shadow-md transition-all active:scale-95" 
                 variant={selectedFeedback.isResolved ? "outline" : "default"}
                 onClick={() => handleResolve(selectedFeedback.id)}
                 disabled={selectedFeedback.isResolved}
               >
                 {selectedFeedback.isResolved ? '✅ Sudah Diperbaiki' : 'Tandai Selesai Diperbaiki'}
+              </Button>
+              <Button 
+                className="w-full h-11 text-sm font-extrabold shadow-md transition-all active:scale-95 bg-yellow-400 hover:bg-yellow-500 text-black border-2 border-yellow-500/80 uppercase tracking-wider" 
+                onClick={() => handleDelete(selectedFeedback.id)}
+              >
+                Hapus Evaluasi
               </Button>
             </div>
           </div>
