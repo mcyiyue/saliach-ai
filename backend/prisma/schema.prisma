@@ -69,3 +69,15 @@ model ExternalLink {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model ChatFeedback {
+  id          Int      @id @default(autoincrement())
+  query       String   @db.Text
+  response    String   @db.Text
+  citations   String?  @db.Text // JSON string of retrieved chunks
+  rating      Int      // 1 for thumbs up, -1 for thumbs down
+  comment     String?  @db.Text // Optional user comment
+  isResolved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

@@ -9,6 +9,7 @@ import externalLinkRoutes from './routes/external-link.routes';
 import userRoutes from './routes/user.routes';
 import groupRoutes from './routes/group.routes';
 import permissionRoutes from './routes/permission.routes';
+import feedbackRoutes from './routes/feedback.routes';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -26,6 +27,7 @@ app.use('/api/external-links', externalLinkRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/permissions', permissionRoutes);
+app.use('/api/feedbacks', feedbackRoutes);
 
 // Basic health check
 app.get('/health', (req, res) => {

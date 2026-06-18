@@ -32,6 +32,102 @@ const CopyButton = ({ content, isUser }: { content: string, isUser: boolean }) =
   );
 };
 
+const FeedbackButtons = ({ message, previousUserMessage }: { message: any, previousUserMessage?: string }) => {
+  const [rated, setRated] = useState<'up' | 'down' | null>(null);
+  const [showComment, setShowComment] = useState(false);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const submitFeedback = async (ratingVal: number, commentText?: string) => {
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/feedbacks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          query: previousUserMessage || 'Pertanyaan tidak diketahui',
+          response: message.content,
+          citations: message.citations || null,
+          rating: ratingVal,
+          comment: commentText
+        })
+      });
+    } catch (e) {
+      console.error('Failed to submit feedback:', e);
+    } finally {
+      setSubmitting(false);
+      setShowComment(false);
+    }
+  };
+
+  const handleRate = async (rating: 1 | -1) => {
+    if (rated) return;
+    setRated(rating === 1 ? 'up' : 'down');
+    if (rating === -1) {
+      setShowComment(true);
+    } else {
+      await submitFeedback(1);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2 mt-2 w-full max-w-sm">
+      <div className="flex items-center gap-2">
+        <CopyButton content={message.content} isUser={false} />
+        
+        <div className="h-4 w-px bg-border/50 mx-1"></div>
+        
+        <button 
+          onClick={() => handleRate(1)}
+          disabled={!!rated}
+          className={`p-1.5 md:p-2 rounded-lg transition-all flex items-center justify-center shadow-sm border border-border/50 ${
+            rated === 'up' ? 'bg-green-500/20 text-green-600 border-green-500/30' : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
+          }`}
+          title="Jawaban Bagus"
+        >
+          <svg className="w-4 h-4" fill={rated === 'up' ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
+        </button>
+        
+        <button 
+          onClick={() => handleRate(-1)}
+          disabled={!!rated && rated !== 'down'}
+          className={`p-1.5 md:p-2 rounded-lg transition-all flex items-center justify-center shadow-sm border border-border/50 ${
+            rated === 'down' ? 'bg-red-500/20 text-red-600 border-red-500/30' : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
+          }`}
+          title="Jawaban Buruk"
+        >
+          <svg className="w-4 h-4" fill={rated === 'down' ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" /></svg>
+        </button>
+        
+        {rated && !showComment && (
+          <span className="text-xs text-muted-foreground ml-2 animate-in fade-in">Terima kasih atas masukannya!</span>
+        )}
+      </div>
+
+      {showComment && (
+        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 p-3 bg-muted/30 rounded-xl border border-border/50 mt-1">
+          <p className="text-xs text-muted-foreground font-medium">Bantu kami memperbaiki jawaban ini (opsional):</p>
+          <textarea
+            className="w-full text-sm p-2 rounded-md bg-background border border-border/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none min-h-[60px] resize-none"
+            placeholder="Konteks salah, ayat tidak tepat, dll..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            disabled={submitting}
+          />
+          <div className="flex justify-end gap-2 mt-1">
+            <Button size="sm" variant="ghost" className="h-7 text-xs px-3" onClick={() => setShowComment(false)}>Batal</Button>
+            <Button size="sm" className="h-7 text-xs px-3 bg-primary" disabled={submitting} onClick={() => submitFeedback(-1, comment)}>Kirim</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function ChatPage() {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<{ role: 'user' | 'ai', content: string, citations?: any[] }[]>([]);
@@ -226,8 +322,15 @@ export default function ChatPage() {
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                   )}
-                  <div className={`flex items-center md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <CopyButton content={msg.content} isUser={msg.role === 'user'} />
+                  <div className={`flex flex-col md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 w-full ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    {msg.role === 'user' ? (
+                      <CopyButton content={msg.content} isUser={true} />
+                    ) : (
+                      <FeedbackButtons 
+                        message={msg} 
+                        previousUserMessage={idx > 0 && messages[idx - 1].role === 'user' ? messages[idx - 1].content : undefined} 
+                      />
+                    )}
                   </div>
                 </div>
               </div>
