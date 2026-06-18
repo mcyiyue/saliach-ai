@@ -193,7 +193,7 @@ export default function Sidebar() {
 
         <div className="p-6 border-b border-sidebar-border/50 pt-8 md:pt-6">
           <h1 className="text-xl font-bold text-primary hover:scale-105 transition-transform duration-300 origin-left cursor-default">
-            Saliach-ai.xyz
+            saliach-ai.xyz
           </h1>
         </div>
 
