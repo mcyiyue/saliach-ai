@@ -202,67 +202,74 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent z-10 flex flex-col">
-        <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col space-y-4 md:space-y-6">
-          {messages.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/85 animate-in fade-in zoom-in-95 duration-500 px-4 text-center">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-card/50 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center mb-4 md:mb-6 transition-all shadow-xl shadow-primary/5 hover:scale-110 hover:border-primary/30 duration-300">
-                <svg className="w-8 h-8 md:w-10 md:h-10 text-primary drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-              </div>
-              <p className="font-medium text-base md:text-lg tracking-wide">Mulai percakapan dengan AI Doktrin</p>
-            </div>
-          ) : (
-            messages.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-4 duration-300`}>
-                <div className={`group relative max-w-[90%] md:max-w-[85%] rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-sm transition-all duration-300 border flex flex-col gap-2 md:gap-3 ${msg.role === 'user'
-                  ? 'bg-primary border-transparent text-primary-foreground shadow-lg shadow-primary/20 rounded-tr-sm hover:shadow-xl hover:shadow-primary/30'
-                  : 'bg-card/70 backdrop-blur-lg border-white/10 dark:border-white/5 text-foreground rounded-tl-sm hover:bg-card/90 shadow-md'
-                  }`}>
-                  {msg.role === 'user' ? (
-                    <div className="whitespace-pre-wrap leading-relaxed font-medium tracking-wide text-sm md:text-base">{msg.content}</div>
-                  ) : (
-                    <div className="prose dark:prose-invert prose-sm md:prose-base max-w-none text-foreground leading-relaxed prose-p:leading-relaxed prose-headings:text-primary">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
-                    </div>
-                  )}
-                  <div className={`flex items-center md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <CopyButton content={msg.content} isUser={msg.role === 'user'} />
+      {/* Main Content Wrapper */}
+      <div className="flex-1 overflow-hidden p-3 md:p-6 flex flex-col items-center z-10 gap-3 md:gap-4">
+        
+        {/* Isolated Chat Container */}
+        <div className="w-full max-w-4xl flex-1 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl md:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] overflow-hidden flex flex-col relative">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+            <div className="flex flex-col space-y-4 md:space-y-6">
+              {messages.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/85 animate-in fade-in zoom-in-95 duration-500 px-4 text-center mt-10 md:mt-20">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-background/50 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center mb-4 md:mb-6 transition-all shadow-xl shadow-primary/5 hover:scale-110 hover:border-primary/30 duration-300">
+                    <svg className="w-8 h-8 md:w-10 md:h-10 text-primary drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
                   </div>
+                  <p className="font-medium text-base md:text-lg tracking-wide">Mulai percakapan dengan AI Doktrin</p>
                 </div>
-              </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
+              ) : (
+                messages.map((msg, idx) => (
+                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-4 duration-300`}>
+                    <div className={`group relative max-w-[90%] md:max-w-[85%] rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-sm transition-all duration-300 border flex flex-col gap-2 md:gap-3 ${msg.role === 'user'
+                      ? 'bg-primary border-transparent text-primary-foreground shadow-lg shadow-primary/20 rounded-tr-sm hover:shadow-xl hover:shadow-primary/30'
+                      : 'bg-background/80 backdrop-blur-lg border-white/10 dark:border-white/5 text-foreground rounded-tl-sm hover:bg-background shadow-md'
+                      }`}>
+                      {msg.role === 'user' ? (
+                        <div className="whitespace-pre-wrap leading-relaxed font-medium tracking-wide text-sm md:text-base">{msg.content}</div>
+                      ) : (
+                        <div className="prose dark:prose-invert prose-sm md:prose-base max-w-none text-foreground leading-relaxed prose-p:leading-relaxed prose-headings:text-primary">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      )}
+                      <div className={`flex items-center md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <CopyButton content={msg.content} isUser={msg.role === 'user'} />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Input Area */}
-      <div className="p-3 md:p-6 bg-transparent z-10 pb-4 md:pb-8">
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto relative flex items-center shadow-2xl rounded-full animate-in slide-in-from-bottom-8 fade-in duration-500">
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            disabled={loading}
-            placeholder="Ketik pertanyaan Anda..."
-            className="w-full h-12 md:h-16 pl-6 md:pl-8 pr-28 md:pr-36 rounded-full bg-card/80 backdrop-blur-xl border border-white/10 text-foreground text-sm md:text-base focus-visible:ring-primary focus-visible:ring-2 shadow-inner transition-all hover:bg-card"
-          />
-          <Button
-            type="submit"
-            disabled={loading || !query.trim()}
-            className="absolute right-1.5 md:right-2 h-9 md:h-12 px-4 md:px-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all font-semibold shadow-md active:scale-95 disabled:opacity-50 text-xs md:text-base"
-          >
-            {loading ? (
-              <span className="flex items-center gap-1.5 md:gap-2">
-                <svg className="animate-spin h-3.5 w-3.5 md:h-4 md:w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span className="hidden sm:inline">Memproses</span>
-              </span>
-            ) : 'Kirim'}
-          </Button>
-        </form>
+        {/* Input Area Wrapper */}
+        <div className="w-full max-w-4xl shrink-0 pb-1 md:pb-2">
+          <form onSubmit={handleSubmit} className="relative flex items-center shadow-xl rounded-full animate-in slide-in-from-bottom-8 fade-in duration-500">
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              disabled={loading}
+              placeholder="Ketik pertanyaan Anda..."
+              className="w-full h-12 md:h-14 pl-5 md:pl-6 pr-24 md:pr-32 rounded-full bg-card/80 backdrop-blur-xl border border-white/10 text-foreground text-sm md:text-base focus-visible:ring-primary focus-visible:ring-2 shadow-inner transition-all hover:bg-card"
+            />
+            <Button
+              type="submit"
+              disabled={loading || !query.trim()}
+              className="absolute right-1 md:right-1.5 h-10 md:h-11 px-4 md:px-6 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all font-semibold shadow-md active:scale-95 disabled:opacity-50 text-xs md:text-sm"
+            >
+              {loading ? (
+                <span className="flex items-center gap-1.5 md:gap-2">
+                  <svg className="animate-spin h-3.5 w-3.5 md:h-4 md:w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span className="hidden sm:inline">Proses</span>
+                </span>
+              ) : 'Kirim'}
+            </Button>
+          </form>
+        </div>
+
       </div>
     </div>
   );
