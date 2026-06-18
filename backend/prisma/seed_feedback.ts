@@ -5,9 +5,12 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding Feedback Module...');
 
-  // Cek apakah modul Evaluasi AI sudah ada
   let evaluasiModule = await prisma.module.findFirst({
     where: { name: 'Evaluasi AI' }
+  });
+
+  const adminFolder = await prisma.module.findFirst({
+    where: { name: 'Admin' }
   });
 
   if (!evaluasiModule) {
@@ -16,11 +19,21 @@ async function main() {
         name: 'Evaluasi AI',
         routePath: '/admin/feedbacks',
         icon: 'Shield',
+        parentId: adminFolder?.id || null
       }
     });
     console.log('Created Evaluasi AI module:', evaluasiModule);
   } else {
-    console.log('Evaluasi AI module already exists.');
+    // Pastikan terikat ke Admin jika belum
+    if (adminFolder && evaluasiModule.parentId !== adminFolder.id) {
+      evaluasiModule = await prisma.module.update({
+        where: { id: evaluasiModule.id },
+        data: { parentId: adminFolder.id }
+      });
+      console.log('Moved Evaluasi AI under Admin module.');
+    } else {
+      console.log('Evaluasi AI module already exists and is in the right place.');
+    }
   }
 
   // Tambahkan permission untuk grup Admin (id 1)

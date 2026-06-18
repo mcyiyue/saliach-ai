@@ -9,8 +9,8 @@ const router = Router();
 router.post('/', authenticate, submitFeedback);
 
 // Endpoints for admin to view and resolve feedbacks
-// We require read/write permission to the /admin/evaluasi-ai module (we will define this module)
-router.get('/', authenticate, requirePermission('/admin/evaluasi-ai', 'read'), getFeedbacks);
-router.put('/:id/resolve', authenticate, requirePermission('/admin/evaluasi-ai', 'write'), resolveFeedback);
+// We require read/write permission to the /admin/feedbacks module (we will define this module)
+router.get('/', authenticate, requirePermission('/admin/feedbacks', 'read'), getFeedbacks);
+router.put('/:id/resolve', authenticate, requirePermission('/admin/feedbacks', 'write'), resolveFeedback);
 
 export default router;
