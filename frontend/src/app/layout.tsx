@@ -58,7 +58,7 @@ export default function RootLayout({
         </button>
 
         {!isLoginPage && <Sidebar />}
-        <main className={`flex-1 overflow-y-auto bg-background/50 h-[100dvh] transition-colors duration-300`}>
+        <main className={`flex-1 ${pathname === '/chat' ? 'overflow-hidden' : 'overflow-y-auto'} bg-background/50 h-[100dvh] transition-colors duration-300 relative`}>
           {children}
         </main>
       </body>
