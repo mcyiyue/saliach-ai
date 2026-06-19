@@ -323,9 +323,16 @@ export default function IngestPage() {
               </div>
 
               {status.message && (
-                <div className={`p-4 rounded-xl border font-medium shadow-sm transition-colors ${status.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-900/50 dark:text-emerald-200' : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-900/50 dark:text-red-200'
+                <div className={`p-4 rounded-xl border font-medium shadow-sm transition-colors flex justify-between items-start gap-4 ${status.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-900/50 dark:text-emerald-200' : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-900/50 dark:text-red-200'
                   }`}>
-                  {status.message}
+                  <div>{status.message}</div>
+                  <button 
+                    type="button" 
+                    onClick={() => setStatus({ type: 'idle', message: '' })}
+                    className="opacity-70 hover:opacity-100 text-lg font-bold"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
 
@@ -361,7 +368,7 @@ export default function IngestPage() {
                   <input 
                     id="file-upload-input"
                     type="file" 
-                    accept=".pdf,.docx,.txt,.md"
+                    accept=".md,.txt"
                     className="hidden"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
@@ -383,16 +390,23 @@ export default function IngestPage() {
                   ) : (
                     <div className="text-center">
                       <p className="text-sm font-semibold text-foreground/90 mb-1">Tarik & lepas file di sini, atau klik untuk memilih</p>
-                      <p className="text-xs text-muted-foreground/80">Mendukung file PDF, Word (DOCX), atau Text (.txt, .md) hingga 10MB</p>
+                      <p className="text-xs text-muted-foreground/80">Eksklusif hanya mendukung file Markdown (.md) dan Text (.txt) hingga 10MB</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {status.message && (
-                <div className={`p-4 rounded-xl border font-medium shadow-sm transition-colors ${status.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-900/50 dark:text-emerald-200' : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-900/50 dark:text-red-200'
+                <div className={`p-4 rounded-xl border font-medium shadow-sm transition-colors flex justify-between items-start gap-4 ${status.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-900/50 dark:text-emerald-200' : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-900/50 dark:text-red-200'
                   }`}>
-                  {status.message}
+                  <div>{status.message}</div>
+                  <button 
+                    type="button" 
+                    onClick={() => setStatus({ type: 'idle', message: '' })}
+                    className="opacity-70 hover:opacity-100 text-lg font-bold"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
 

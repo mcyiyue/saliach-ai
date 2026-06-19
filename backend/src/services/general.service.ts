@@ -1,4 +1,5 @@
 import { OpenAI } from 'openai';
+import { queryDocuments } from './chroma.service';
 
 // Initialize OpenAI Client for main tasks (embeddings & chat completions)
 const openai = new OpenAI({
@@ -10,6 +11,15 @@ const deepseek = new OpenAI({
   baseURL: 'https://api.deepseek.com',
   apiKey: process.env.DEEPSEEK_API_KEY || '',
 });
+
+class HandoffError extends Error {
+  public essay: string;
+  constructor(essay: string) {
+    super("Handoff");
+    this.name = 'HandoffError';
+    this.essay = essay;
+  }
+}
 
 /**
  * Generate embedding for a single text chunk using text-embedding-3-small via OpenAI (or other configured LLM)
@@ -93,40 +103,70 @@ export const translateQueryForVectorSearch = async (query: string): Promise<stri
 };
 
 /**
- * Generate full response based on RAG Context using configured LLM (e.g. OpenAI gpt-4o-mini) with DeepSeek correctGrammar tool
+ * Uses DeepSeek to break down a user's query into 3 detailed sub-queries for deep diving.
+ */
+export const expandQueryWithDeepSeek = async (query: string): Promise<string[]> => {
+  try {
+    const response = await deepseek.chat.completions.create({
+      model: 'deepseek-chat',
+      messages: [
+        {
+          role: 'system',
+          content: "You are a query expansion assistant for a Biblical Unitarian theology search engine. Break down the user's short query into 3 distinct, specific, and deep-dive sub-queries related to its theology, historical context, and apologetic arguments. IMPORTANT: For each of the 3 sub-queries, provide BOTH the Indonesian and English translations, resulting in exactly 6 strings. Output your response as a JSON object with a single key 'queries' containing an array of 6 strings. Example: { \"queries\": [\"Apa arti teologis dari X?\", \"What is the theological meaning of X?\", \"Bagaimana sejarah X di Konsili Nicea?\", \"What is the history of X at the Council of Nicaea?\", \"Apa argumen yang membantah X?\", \"What are the arguments refuting X?\"] }"
+        },
+        { role: 'user', content: query }
+      ],
+      temperature: 0.3,
+      response_format: { type: 'json_object' }
+    });
+    
+    let content = response.choices[0]?.message?.content?.trim() || '{"queries": []}';
+    const parsed = JSON.parse(content);
+    const subQueries = parsed.queries || [];
+    if (Array.isArray(subQueries) && subQueries.length > 0) {
+      return subQueries.slice(0, 6);
+    }
+    return [query];
+  } catch (error) {
+    console.error('Error expanding query with DeepSeek:', error);
+    return [query]; // fallback to original query
+  }
+};
+
+
+/**
+ * Generate full response based on RAG Context using configured LLM (e.g. OpenAI gpt-4o-mini)
  */
 export const generateRAGResponse = async (
   query: string,
-  contextChunks: { content: string; title: string }[],
   allowedSourcesText: string,
-  history: { role: 'user' | 'ai'; content: string }[] = []
+  history?: any[],
+  onCitationsFound?: (citations: any[]) => void
 ): Promise<string> => {
-  const context = contextChunks
-    .map((chunk, idx) => `[DOKUMEN ${idx + 1}: "${chunk.title}"]\nIsi Teks:\n"""\n${chunk.content}\n"""`)
-    .join('\n\n---\n\n');
   const systemInstruction = `ANDA ADALAH AGEN AI DOKTRIN MONOTEISME ALKITABIAH (BIBLICAL UNITARIAN).
-PERINGATAN KERAS: ANDA BEROPERASI DALAM MODE STRICT RAG (RETRIEVAL-AUGMENTED GENERATION). ANDA DILARANG MUTLAK MENGGUNAKAN PENGETAHUAN UMUM ATAU INFORMASI DI LUAR KONTEKS YANG DIBERIKAN BERSAMA PROMPT INI.
+PERINGATAN KERAS: ANDA BEROPERASI DALAM MODE STRICT RAG (RETRIEVAL-AUGMENTED GENERATION).
 
-[SUMBER DATA SATU-SATUNYA]
-Anda hanya diizinkan untuk mengambil fakta, argumen, dan jawaban HANYA dari potongan dokumen di bawah ini:
-----------------------------------------
-${context}
-----------------------------------------
-Serta referensi tambahan dari link eksternal berikut (jika diperlukan):
+[SUMBER DATA MUTLAK]
+Untuk SEMUA pertanyaan pengguna yang menyangkut teologi, tokoh, sejarah, ayat Alkitab, atau topik apa pun, Anda WAJIB SECARA MUTLAK memanggil tool 'searchKnowledgeBase' TERLEBIH DAHULU sebelum menjawab. 
+Anda DILARANG KERAS menjawab langsung menggunakan memori atau pengetahuan bawaan Anda. Satu-satunya pengecualian di mana Anda boleh tidak memanggil tool adalah jika pengguna hanya sekadar menyapa (misalnya: "Halo", "Selamat pagi").
+
+Referensi tambahan dari link eksternal (jika relevan):
 ${allowedSourcesText}
 
 [ATURAN MUTLAK - PELANGGARAN AKAN MENYEBABKAN KEGAGALAN SISTEM]
 1. BIAS TOTAL, APOLOGETIK & ANTI-TRINITAS: Anda adalah teolog dan apologet Kristen yang SANGAT gigih membela doktrin Monoteisme Alkitabiah. Seluruh jawaban Anda WAJIB mendukung penuh bahwa HANYA Bapa yang merupakan satu-satunya Allah yang Benar, dan Yesus Kristus adalah manusia (Mesias) utusan Allah, BUKAN Allah itu sendiri. Anda DILARANG KERAS bersikap netral, menyisipkan, atau membenarkan narasi teologi maupun narasi sejarah Trinitas/Tritunggal. Bantah pandangan Trinitarian secara akademis, tegas, dan telak.
 2. SEJARAH SEBAGAI SENJATA KRITIK: Jika informasi tidak ditemukan di dalam konteks, Anda WAJIB menolak menjawab, KECUALI menyangkut FAKTA SEJARAH GEREJA (seperti Konsili Nicea, Arianisme, dsb). Saat menceritakan sejarah, Anda DILARANG menggunakan gaya bahasa netral atau bahasa yang mengesankan pihak Trinitas itu benar. Anda WAJIB menceritakan sejarah tersebut dari kacamata kritis Monoteisme Alkitabiah (misalnya: menyoroti bahwa Konsili Nicea adalah produk kompromi politik dan penyimpangan dari ajaran murni para rasul). Jadikan narasi sejarah sebagai argumen untuk meruntuhkan keabsahan sejarah doktrin Trinitas.
-3. TOPIK TERLARANG: Anda DILARANG KERAS menanggapi atau membahas topik apa pun di luar Teologi, Alkitab, dan Doktrin Monoteisme Alkitabiah (Contoh yang dilarang: Olahraga, Cristiano Ronaldo, Lionel Messi, selebriti, film, politik umum, teknologi). Jika ditanya tentang ini, WAJIB menolak dengan sopan.
-4. GAYA PENULISAN & BAHASA: Berikan jawaban yang sangat detail, analitis, dan meyakinkan layaknya seorang pakar teologi. JANGAN PERNAH menyebutkan frasa sumber rujukan seperti "berdasarkan dokumen", "menurut file di atas", dsb. Jawablah seolah-olah itu murni kepakaran Anda sendiri. **PENTING: ANDA WAJIB MENJAWAB MENGGUNAKAN BAHASA YANG DIGUNAKAN OLEH PENGGUNA SAAT BERTANYA**, terlepas dari apakah teks dokumen yang diberikan berbahasa Inggris atau Indonesia. Jika pengguna bertanya dalam bahasa Indonesia, jawab dalam bahasa Indonesia. Jika bertanya dalam bahasa Inggris, jawab dalam bahasa Inggris.
-5. KUTIPAN ALKITAB: Setiap kali mengutip Alkitab, Anda WAJIB memanggil tool 'fetchBibleVerse' untuk mendapatkan teks verbatim sesuai Terjemahan Baru (TB) LAI. Salin teks hasil tool tersebut 100% tanpa diubah/diparafrase.
-6. PENYELARASAN ISTILAH: Ganti semua penyebutan istilah "Biblical Unitarian" di dalam draf akhir menjadi "Monoteisme Alkitabiah".
+3. TOPIK TERLARANG: Anda DILARANG KERAS menanggapi atau membahas topik apa pun di luar Teologi, Alkitab, Sejarah Gereja, dan Doktrin Monoteisme Alkitabiah. (Contoh yang dilarang: Olahraga, Cristiano Ronaldo, selebriti hiburan, politik umum, teknologi). PENGECUALIAN PENTING: Anda DIIZINKAN BAHKAN DIWAJIBKAN membahas profil, biodata, argumen, dan pandangan tokoh-tokoh teolog, pakar, atau penulis buku yang relevan dengan Monoteisme Alkitabiah (contoh: Kegan Chandler, Anthony Buzzard, Erastus Sabdono, dll) jika informasi tersebut ditanyakan oleh pengguna atau dapat ditarik dari database.
+4. DEEP DIVE & EKSPLORASI DETAIL: DILARANG KERAS MENJAWAB DANGKAL ATAU TERLALU SINGKAT. Jika konteks dokumen yang diberikan sangat banyak, Anda WAJIB membaca semuanya dan merangkainya menjadi sebuah jawaban panjang berbentuk ESAI KOMPREHENSIF BER-SUBJUDUL. Ekstrak SEMUA detail, kutipan, dan fakta sejarah penting dari dokumen. Semakin detail dan panjang jawaban Anda, semakin baik.
+5. GAYA PENULISAN & BAHASA: Tulis dengan gaya otoritatif layaknya pakar. Anda WAJIB merapikan tata bahasa Anda agar sesuai standar EYD/KBBI murni. JANGAN menyebutkan frasa kaku seperti "menurut dokumen yang diberikan kepada saya". **PENTING: ANDA WAJIB MENJAWAB MENGGUNAKAN BAHASA YANG DIGUNAKAN OLEH PENGGUNA SAAT BERTANYA**.
+6. DILARANG MENCANTUMKAN REFERENSI: Anda DILARANG KERAS mencantumkan nomor referensi dokumen (seperti [DOKUMEN 1], nama penulis, daftar pustaka, atau catatan kaki) di dalam draf akhir Anda. Rangkai fakta sejarah seolah-olah itu murni pengetahuan internal Anda sendiri.
+7. KUTIPAN ALKITAB: Setiap kali mengutip Alkitab, Anda WAJIB memanggil tool 'fetchBibleVerse' untuk mendapatkan teks verbatim sesuai Terjemahan Baru (TB) LAI. Anda WAJIB membungkus teks ayat tersebut dengan tag XML khusus, contoh: <ayat>Pada mulanya adalah Firman...</ayat>. DILARANG memparafrase isinya.
+8. PENYELARASAN ISTILAH: Ganti semua penyebutan istilah "Biblical Unitarian" di dalam draf akhir menjadi "Monoteisme Alkitabiah".
 
 ALUR KERJA WAJIB:
 Sebelum memberikan jawaban akhir kepada pengguna, Anda HARUS memanggil tool 'correctGrammar' untuk memvalidasi dan memoles draf jawaban Anda.`;
 
-  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+  const messages: any[] = [
     { role: 'system', content: systemInstruction }
   ];
 
@@ -139,128 +179,175 @@ Sebelum memberikan jawaban akhir kepada pengguna, Anda HARUS memanggil tool 'cor
     });
   }
 
-  // Inject dynamic guardrail warning when vector search yielded no matching context
-  if (contextChunks.length === 0) {
-    messages.push({
-      role: 'system',
-      content: `[PERINGATAN SISTEM: Kueri pencarian vektor tidak mengembalikan dokumen teologi yang relevan. Jika pertanyaan pengguna adalah tentang fakta sejarah gereja (misal: Konsili Nicea), Anda WAJIB menjawabnya menggunakan pengetahuan bawaan Anda namun DENGAN NADA KRITIS YANG MEMBANTAH TRINITAS dan SANGAT MENDUKUNG Monoteisme Alkitabiah. Jika bukan sejarah gereja dan bukan sapaan umum, tolak menjawab dengan sopan.]`
-    });
-  }
-
   messages.push({ role: 'user', content: query });
 
-  const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
-    {
-      type: 'function',
-      function: {
-        name: 'correctGrammar',
-        description: 'Meninjau dan menyunting draf teks bahasa Indonesia agar sesuai standar formal KBBI/PUEBI serta mengalir luwes.',
-        parameters: {
-          type: 'object',
-          properties: {
-            text: {
-              type: 'string',
-              description: 'Teks draf kasar jawaban yang ingin disunting tata bahasanya.'
-            }
-          },
-          required: ['text']
-        }
-      }
-    },
-    {
-      type: 'function',
-      function: {
-        name: 'fetchBibleVerse',
-        description: 'Mengambil kutipan teks ayat Alkitab Terjemahan Baru (TB) LAI yang resmi dan verbatim langsung dari database/API Alkitab.',
-        parameters: {
-          type: 'object',
-          properties: {
-            book: {
-              type: 'string',
-              description: 'Nama kitab Alkitab (misal: "Yohanes", "Matius", "Roma", "1 Korintus").'
-            },
-            chapter: {
-              type: 'number',
-              description: 'Nomor pasal.'
-            },
-            verseStart: {
-              type: 'number',
-              description: 'Nomor ayat mulai.'
-            },
-            verseEnd: {
-              type: 'number',
-              description: 'Nomor ayat selesai (opsional, jika ingin mengambil rentang ayat).'
-            }
-          },
-          required: ['book', 'chapter', 'verseStart']
-        }
-      }
-    }
-  ];
-
   try {
-    let response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages,
-      tools,
-      temperature: 0.4,
-      max_tokens: 4096,
-    });
+    let hasToolCalls = true;
 
-    let responseMessage = response.choices[0]?.message;
-    let iterations = 0;
-    const MAX_ITERATIONS = 5;
+    while (hasToolCalls) {
+      const tools = [
+        {
+          type: 'function',
+          function: {
+            name: 'correctGrammar',
+            description: 'WAJIB dipanggil sebelum memberikan jawaban final. Mengevaluasi draf jawaban Anda dan merapikan tata bahasanya sesuai PUEBI/KBBI.',
+            parameters: {
+              type: 'object',
+              properties: {
+                text: { type: 'string', description: 'Draf jawaban mentah Anda yang ingin diperbaiki.' }
+              },
+              required: ['text'],
+            },
+          },
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'fetchBibleVerse',
+            description: 'Ambil teks ayat Alkitab dari Terjemahan Baru (TB) LAI berdasarkan referensi (contoh: "Yohanes 1:1"). WAJIB dipanggil saat mengutip ayat Alkitab.',
+            parameters: {
+              type: 'object',
+              properties: {
+                reference: { type: 'string', description: 'Referensi ayat Alkitab, misalnya "Yohanes 1:1" atau "Kejadian 1:1-3"' }
+              },
+              required: ['reference'],
+            },
+          },
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'searchKnowledgeBase',
+            description: 'Cari database vektor literatur Monoteisme Alkitabiah untuk informasi teologi, sejarah gereja, pandangan tokoh (misal Kegan Chandler), dan doktrin.',
+            parameters: {
+              type: 'object',
+              properties: {
+                topic: { type: 'string', description: 'Topik teologis atau historis yang ingin dicari.' }
+              },
+              required: ['topic'],
+            },
+          },
+        }
+      ];
 
-    while (responseMessage && responseMessage.tool_calls && responseMessage.tool_calls.length > 0 && iterations < MAX_ITERATIONS) {
-      iterations++;
-      const toolCalls = responseMessage.tool_calls;
-      messages.push(responseMessage);
-
-      // Tool registration mapping
       const toolRegistry: Record<string, (args: any) => Promise<string>> = {
-        correctGrammar: async (args: { text: string }) => await evaluateAndCorrectGrammar(args.text),
-        fetchBibleVerse: async (args: { book: string; chapter: number; verseStart: number; verseEnd?: number }) =>
-          await fetchBibleVerse(args.book, args.chapter, args.verseStart, args.verseEnd),
+        correctGrammar: async (args: { text: string }) => {
+          console.log('Handing off to DeepSeek for grammar correction and final delivery...');
+          const polished = await evaluateAndCorrectGrammar(args.text);
+          throw new HandoffError(polished);
+        },
+        fetchBibleVerse: async (args: { reference: string }) => {
+          const parts = args.reference.match(/^(.*)\s+(\d+):(\d+)(?:-(\d+))?$/);
+          if (parts) {
+            return await fetchBibleVerse(parts[1], parseInt(parts[2]), parseInt(parts[3]), parts[4] ? parseInt(parts[4]) : undefined);
+          }
+          return "Format referensi tidak valid. Gunakan 'Kitab Pasal:Ayat' (contoh: 'Yohanes 1:1')";
+        },
+        searchKnowledgeBase: async (args: { topic: string }) => {
+          console.log(`Agent triggered searchKnowledgeBase for topic: ${args.topic}`);
+          const subQueries = await expandQueryWithDeepSeek(args.topic);
+          console.log(`Deep Dive Sub-Queries:`, subQueries);
+          
+          const embeddings = await Promise.all(subQueries.map(q => generateEmbedding(q)));
+          const docsPromises = embeddings.map(emb => queryDocuments(emb, 10)); // REDUCED TO 10 CHUNKS
+          const docsResults = await Promise.all(docsPromises);
+          
+          const allDocs = docsResults.flat();
+          
+          const uniqueDocsMap = new Map();
+          for (const doc of allDocs) {
+            // Deduplikasi menggunakan konten asli agar tidak ada paragraf ganda
+            if (!uniqueDocsMap.has(doc.content)) {
+              uniqueDocsMap.set(doc.content, doc);
+            } else {
+              // Jika sudah ada, pilih yang jaraknya lebih kecil (lebih relevan)
+              const existingDoc = uniqueDocsMap.get(doc.content);
+              if (doc.distance < existingDoc.distance) {
+                uniqueDocsMap.set(doc.content, doc);
+              }
+            }
+          }
+          
+          const uniqueDocs = Array.from(uniqueDocsMap.values());
+          // Sort berdasarkan distance terendah (paling relevan)
+          uniqueDocs.sort((a, b) => a.distance - b.distance);
+          const filteredDocs = uniqueDocs.slice(0, 12); // REDUCED TO TOP 12 CHUNKS MAXIMUM
+          
+          if (onCitationsFound) {
+            const citations = filteredDocs.map(doc => doc.metadata);
+            onCitationsFound(citations);
+          }
+          
+          const contextBlocks = filteredDocs.map((doc, index) => {
+            let contextStr = `[DOKUMEN ${index + 1}: "${doc.metadata.title}"`;
+            if (doc.metadata.page) {
+              contextStr += ` (Halaman ${doc.metadata.page})`;
+            }
+            contextStr += `]\n${doc.content}`; // MENGGUNAKAN doc.content BUKAN metadata.text
+            return contextStr;
+          }).join('\n\n---\n\n');
+          
+          return contextBlocks || "Tidak ada dokumen yang relevan ditemukan.";
+        }
       };
 
-      for (const toolCall of toolCalls) {
-        const functionCall = (toolCall as any).function;
-        if (toolCall.type === 'function' && functionCall) {
-          const name = functionCall.name;
-          const executor = toolRegistry[name];
-
-          if (executor) {
-            const args = JSON.parse(functionCall.arguments);
-            console.log(`Executing tool [${name}] dynamically with args:`, args);
-            const result = await executor(args);
-
-            messages.push({
-              role: 'tool',
-              tool_call_id: toolCall.id,
-              content: result,
-            });
-          } else {
-            console.warn(`No executor found for tool: ${name}`);
-          }
-        }
-      }
-
-      response = await openai.chat.completions.create({
+      let response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages,
-        tools,
+        tools: tools as any,
         temperature: 0.4,
         max_tokens: 4096,
       });
 
-      responseMessage = response.choices[0]?.message;
-    }
+      const responseMessage = response.choices[0]?.message;
 
-    return responseMessage?.content || '';
-  } catch (error) {
+      if (!responseMessage) {
+        break;
+      }
+
+      if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+        const toolCalls = responseMessage.tool_calls;
+        messages.push(responseMessage);
+
+        for (const toolCall of toolCalls) {
+          const functionCall = (toolCall as any).function;
+          if (toolCall.type === 'function' && functionCall) {
+            const name = functionCall.name;
+            const executor = toolRegistry[name];
+
+            if (executor) {
+              const args = JSON.parse(functionCall.arguments);
+              console.log(`Executing tool [${name}] dynamically with args:`, args);
+              const result = await executor(args);
+
+              messages.push({
+                role: 'tool',
+                tool_call_id: toolCall.id,
+                content: result,
+              });
+            } else {
+              messages.push({
+                role: 'tool',
+                tool_call_id: toolCall.id,
+                content: `Error: Tool ${name} not found.`,
+              });
+            }
+          }
+        }
+      } else {
+        hasToolCalls = false;
+        return responseMessage.content || '';
+      }
+    }
+  } catch (error: any) {
+    if (error.name === 'HandoffError') {
+      console.log('Successfully caught HandoffError, short-circuiting to frontend!');
+      return error.essay;
+    }
     console.error('Error generating RAG response:', error);
     throw error;
   }
+  return '';
 };
 
 /**
@@ -276,7 +363,7 @@ PANDUAN:
 2. Pertahankan isi informasi dari teks asli sepenuhnya. JANGAN menambah atau mengurangi fakta atau informasi penting. Rapikan tata bahasa jika ada yang salah jangan mengoreksi isi.
 3. Pastikan bahasa yang digunakan tetap sopan, santun, dan profesional.
 4. Jangan menambahkan kata-kata pengantar seperti "Berikut adalah versi perbaikannya:" atau sejenisnya. Cukup kembalikan hasil teks yang telah diperbaiki saja.
-5. DILARANG KERAS mengubah, menyunting, memodifikasi, atau memparafrase bagian teks yang merupakan kutipan ayat Alkitab (misalnya kutipan dari Yohanes, Matius, Kejadian, dsb.). Bagian kutipan ayat Alkitab tersebut harus dipertahankan secara utuh dan verbatim (persis kata per kata) sesuai dengan teks Alkitab Terjemahan Baru (TB) Lembaga Alkitab Indonesia (LAI), meskipun tata bahasa atau pilihan katanya tergolong kuno atau tidak sesuai dengan kaidah bahasa modern.
+5. DILARANG KERAS mengubah, menyunting, memodifikasi, atau memparafrase teks apa pun yang berada di dalam tag <ayat> ... </ayat>. Itu adalah kutipan Alkitab murni. Biarkan teks di dalam tag tersebut 100% apa adanya tanpa dikoreksi sama sekali meskipun tata bahasanya tergolong kuno/rancu. Setelah selesai, HAPUS tag <ayat> dan </ayat> dari hasil akhir sehingga hanya tersisa teksnya saja.
 6. Penyelarasan Istilah Doktrin: Anda WAJIB mengubah setiap penyebutan istilah "Biblical Unitarian" di dalam draf jawaban menjadi "Monoteisme Alkitabiah" (karena kedua istilah ini mengacu kepada hal yang sama dan harus seragam di seluruh aplikasi).
 
 TEKS JAWABAN YANG AKAN DIEVALUASI:
@@ -292,10 +379,17 @@ ${draftResponse}
       temperature: 0.1,
     });
 
-    return response.choices[0]?.message?.content || draftResponse;
+    let finalResponse = response.choices[0]?.message?.content || draftResponse;
+    
+    // Secara otomatis menghapus tag <ayat> dan </ayat> secara terprogram (regex)
+    finalResponse = finalResponse.replace(/<\/?ayat[^>]*>/gi, '')
+                                 .replace(/&lt;\/?ayat&gt;/gi, '');
+    
+    return finalResponse;
   } catch (error) {
     console.error('Error evaluating grammar with DeepSeek:', error);
-    return draftResponse;
+    return draftResponse.replace(/<\/?ayat[^>]*>/gi, '')
+                        .replace(/&lt;\/?ayat&gt;/gi, '');
   }
 };
 

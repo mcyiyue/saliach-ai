@@ -1,50 +1,71 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/rbac.middleware';
-import mammoth from 'mammoth';
-const pdf = require('pdf-parse');
 import { generateEmbedding, generateEmbeddingsBatch } from '../services/general.service';
 import { storeDocuments, getAllDocuments, deleteDocumentsByTitle } from '../services/chroma.service';
 import crypto from 'crypto';
 
 /**
- * Improved text chunking function with larger size, overlap, and smart splitting
+ * Markdown-Aware Semantic Chunking
+ * Memotong teks berdasarkan paragraf, tapi melacak hierarki Header (#, ##, dsb)
+ * dan menyuntikkan jejak rekam (breadcrumbs) ke setiap chunk.
  */
-const chunkText = (text: string, maxChunkLength: number = 2500, overlapLength: number = 500): string[] => {
-  const cleanText = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+const chunkMarkdownText = (text: string, maxChunkLength: number = 2500): string[] => {
+  const lines = text.split(/\n+/);
   const chunks: string[] = [];
-  let startIndex = 0;
-
-  while (startIndex < cleanText.length) {
-    let endIndex = startIndex + maxChunkLength;
-
-    if (endIndex < cleanText.length) {
-      const lastPeriod = cleanText.lastIndexOf('.', endIndex);
-      const lastNewline = cleanText.lastIndexOf('\n', endIndex);
-      
-      let bestSplit = Math.max(lastPeriod, lastNewline);
-      
-      if (bestSplit <= startIndex + (maxChunkLength / 2)) {
-        bestSplit = cleanText.lastIndexOf(' ', endIndex);
-      }
-      
-      if (bestSplit > startIndex) {
-        endIndex = bestSplit + 1;
-      }
-    }
-
-    const chunk = cleanText.substring(startIndex, endIndex).trim();
+  
+  let currentHeaders: string[] = [];
+  let currentChunkLines: string[] = [];
+  let currentLength = 0;
+  
+  const pushChunk = () => {
+    if (currentChunkLines.length === 0) return;
     
-    if (chunk.length > 150) {
-      chunks.push(chunk);
+    let prefix = '';
+    const activeHeaders = currentHeaders.filter(h => h).join(' > ');
+    if (activeHeaders) {
+      prefix = `[Konteks Hierarki: ${activeHeaders}]\n\n`;
     }
-
-    let nextStartIndex = endIndex - overlapLength;
-    if (nextStartIndex <= startIndex) {
-      nextStartIndex = endIndex;
+    
+    chunks.push(prefix + currentChunkLines.join('\n\n'));
+    currentChunkLines = [];
+    currentLength = 0;
+  };
+  
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    if (!line) continue;
+    
+    // Check if it's a header
+    const headerMatch = line.match(/^(#{1,6})\s+(.*)$/);
+    if (headerMatch) {
+      const level = headerMatch[1].length;
+      const title = headerMatch[2].trim();
+      
+      // Update headers: replace the current level, clear deeper levels
+      currentHeaders[level - 1] = title;
+      currentHeaders.length = level; // Truncate deeper levels
+      
+      // If we encounter a new header (H1/H2) and the current chunk has some content, force a clean split
+      if (level <= 2 && currentLength > 500) {
+        pushChunk();
+      }
+      
+      currentChunkLines.push(line);
+      currentLength += line.length + 2;
+      continue;
     }
-    startIndex = nextStartIndex;
+    
+    // Normal paragraph: if adding this line exceeds max length, split!
+    if (currentLength + line.length > maxChunkLength && currentLength > 0) {
+      pushChunk();
+    }
+    
+    currentChunkLines.push(line);
+    currentLength += line.length + 2;
   }
-
+  
+  pushChunk();
+  
   return chunks;
 };
 
@@ -60,8 +81,8 @@ export const ingestDocument = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    // 1. Chunk the document
-    const chunks = chunkText(content);
+    // 1. Chunk the document using Semantic Chunking
+    const chunks = chunkMarkdownText(content);
     console.log(`Document split into ${chunks.length} chunks.`);
 
     // 2. Generate embeddings in a single batch request
@@ -180,8 +201,8 @@ export const updateDocument = async (req: AuthRequest, res: Response): Promise<v
     // 1. Hapus dokumen lama
     await deleteDocumentsByTitle(oldTitle);
     
-    // 2. Ingest dokumen baru
-    const chunks = chunkText(content);
+    // 2. Ingest dokumen baru menggunakan Semantic Chunking
+    const chunks = chunkMarkdownText(content);
     console.log(`Updating document. Split into ${chunks.length} chunks.`);
     
     // 3. Generate embeddings in a single batch request
@@ -219,6 +240,7 @@ export const updateDocument = async (req: AuthRequest, res: Response): Promise<v
 
 /**
  * Helper to extract text from file based on its extension.
+ * STRICTLY ONLY ACCEPTS .md AND .txt
  */
 const extractTextFromFile = async (file: any): Promise<string> => {
   const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
@@ -228,16 +250,8 @@ const extractTextFromFile = async (file: any): Promise<string> => {
     case 'md':
       return file.buffer.toString('utf-8');
 
-    case 'pdf':
-      const pdfData = await pdf(file.buffer);
-      return pdfData.text;
-
-    case 'docx':
-      const docxData = await mammoth.extractRawText({ buffer: file.buffer });
-      return docxData.value;
-
     default:
-      throw new Error(`Format file .${fileExtension} tidak didukung.`);
+      throw new Error(`Format file .${fileExtension} ditolak. Sistem kini secara eksklusif hanya menerima file .md atau .txt untuk memfasilitasi Semantic Chunking tingkat tinggi.`);
   }
 };
 
@@ -269,8 +283,8 @@ export const ingestUnifiedFile = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    // 2. Chunk the document
-    const chunks = chunkText(content);
+    // 3. Chunk the document using Semantic Chunking
+    const chunks = chunkMarkdownText(content);
     console.log(`Document [${title}] split into ${chunks.length} chunks.`);
 
     const ids: string[] = [];

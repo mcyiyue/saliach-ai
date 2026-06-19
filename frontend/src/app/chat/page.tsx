@@ -1,9 +1,40 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { CheckCircle2, ChevronRight, AlertCircle, Copy, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+
+const LoadingIndicator = () => {
+  const [loadingText, setLoadingText] = useState("Menghubungkan ke agen...");
+  const texts = [
+    "Menyusun kueri analitis mendalam...",
+    "Mengeksplorasi database teologi & sejarah...",
+    "Membaca literatur Monoteisme Alkitabiah...",
+    "Mensintesis jawaban esai komprehensif..."
+  ];
+
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % texts.length;
+      setLoadingText(texts[i]);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center space-y-3 py-4 text-muted-foreground/80 animate-in fade-in duration-500">
+      <div className="flex space-x-2">
+        <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+        <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+        <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce"></div>
+      </div>
+      <p className="text-sm font-medium animate-pulse">{loadingText}</p>
+    </div>
+  );
+};
 
 const CopyButton = ({ content, isUser }: { content: string, isUser: boolean }) => {
   const [copied, setCopied] = useState(false);
@@ -316,7 +347,11 @@ export default function ChatPage() {
                     <div className="whitespace-pre-wrap leading-relaxed font-medium tracking-wide text-sm md:text-base">{msg.content}</div>
                   ) : (
                     <div className="prose dark:prose-invert prose-sm md:prose-base max-w-none text-foreground leading-relaxed prose-p:leading-relaxed prose-headings:text-primary">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      {msg.content === '' ? (
+                        <LoadingIndicator />
+                      ) : (
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      )}
                     </div>
                   )}
                   <div className={`flex flex-col md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 w-full ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
