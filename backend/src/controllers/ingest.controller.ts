@@ -252,7 +252,8 @@ export const ingestUnifiedFile = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    const title = reqAny.file.originalname;
+    const originalName = reqAny.file.originalname as string;
+    const title = originalName.replace(/\.[^/.]+$/, "");
     
     // 1. Ekstrak teks dari file secara dinamis
     let content: string;
