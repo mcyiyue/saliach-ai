@@ -36,10 +36,13 @@ export const chatStream = async (req: AuthRequest, res: Response): Promise<void>
       }
     );
 
+    // 3.5 Cleanup any leftover XML tags
+    const finalCleanedResponse = polishedResponse.replace(/<\/?ayat[^>]*>/gi, '').replace(/&lt;\/?ayat&gt;/gi, '');
+
     // 7. Stream the polished response back to the client to preserve SSE typing animation effect
     const chunkSize = 12; // 12 characters per chunk for smooth typing effect
-    for (let i = 0; i < polishedResponse.length; i += chunkSize) {
-      const chunk = polishedResponse.substring(i, i + chunkSize);
+    for (let i = 0; i < finalCleanedResponse.length; i += chunkSize) {
+      const chunk = finalCleanedResponse.substring(i, i + chunkSize);
       res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
       // Jeda waktu 35ms per chunk agar terasa alami
       await new Promise(resolve => setTimeout(resolve, 35));

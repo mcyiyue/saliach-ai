@@ -12,15 +12,6 @@ const deepseek = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || '',
 });
 
-class HandoffError extends Error {
-  public essay: string;
-  constructor(essay: string) {
-    super("Handoff");
-    this.name = 'HandoffError';
-    this.essay = essay;
-  }
-}
-
 /**
  * Generate embedding for a single text chunk using text-embedding-3-small via OpenAI (or other configured LLM)
  */
@@ -160,11 +151,8 @@ ${allowedSourcesText}
 4. DEEP DIVE & EKSPLORASI DETAIL: DILARANG KERAS MENJAWAB DANGKAL ATAU TERLALU SINGKAT. Jika konteks dokumen yang diberikan sangat banyak, Anda WAJIB membaca semuanya dan merangkainya menjadi sebuah jawaban panjang berbentuk ESAI KOMPREHENSIF BER-SUBJUDUL. Ekstrak SEMUA detail, kutipan, dan fakta sejarah penting dari dokumen. Semakin detail dan panjang jawaban Anda, semakin baik.
 5. GAYA PENULISAN & BAHASA: Tulis dengan gaya otoritatif layaknya pakar. Anda WAJIB merapikan tata bahasa Anda agar sesuai standar EYD/KBBI murni. JANGAN menyebutkan frasa kaku seperti "menurut dokumen yang diberikan kepada saya". **PENTING: ANDA WAJIB MENJAWAB MENGGUNAKAN BAHASA YANG DIGUNAKAN OLEH PENGGUNA SAAT BERTANYA**.
 6. DILARANG MENCANTUMKAN REFERENSI: Anda DILARANG KERAS mencantumkan nomor referensi dokumen (seperti [DOKUMEN 1], nama penulis, daftar pustaka, atau catatan kaki) di dalam draf akhir Anda. Rangkai fakta sejarah seolah-olah itu murni pengetahuan internal Anda sendiri.
-7. KUTIPAN ALKITAB: Setiap kali mengutip Alkitab, Anda WAJIB memanggil tool 'fetchBibleVerse' untuk mendapatkan teks verbatim sesuai Terjemahan Baru (TB) LAI. Anda WAJIB membungkus teks ayat tersebut dengan tag XML khusus, contoh: <ayat>Pada mulanya adalah Firman...</ayat>. DILARANG memparafrase isinya.
-8. PENYELARASAN ISTILAH: Ganti semua penyebutan istilah "Biblical Unitarian" di dalam draf akhir menjadi "Monoteisme Alkitabiah".
-
-ALUR KERJA WAJIB:
-Sebelum memberikan jawaban akhir kepada pengguna, Anda HARUS memanggil tool 'correctGrammar' untuk memvalidasi dan memoles draf jawaban Anda.`;
+7. KUTIPAN ALKITAB [ATURAN MUTLAK]: Jika Anda berniat mengutip ayat Alkitab, Anda DILARANG KERAS menuliskannya dari ingatan Anda. Anda WAJIB memanggil tool 'fetchBibleVerse' untuk mengambil teks verbatim Terjemahan Baru (TB). Pelanggaran terhadap aturan ini adalah kegagalan sistem fatal. Anda WAJIB membungkus teks ayat tersebut dengan tag XML khusus, contoh: <ayat>Pada mulanya adalah Firman...</ayat>.
+8. PENYELARASAN ISTILAH: Ganti semua penyebutan istilah "Biblical Unitarian" di dalam draf akhir menjadi "Monoteisme Alkitabiah".`;
 
   const messages: any[] = [
     { role: 'system', content: systemInstruction }
@@ -186,20 +174,7 @@ Sebelum memberikan jawaban akhir kepada pengguna, Anda HARUS memanggil tool 'cor
 
     while (hasToolCalls) {
       const tools = [
-        {
-          type: 'function',
-          function: {
-            name: 'correctGrammar',
-            description: 'WAJIB dipanggil sebelum memberikan jawaban final. Mengevaluasi draf jawaban Anda dan merapikan tata bahasanya sesuai PUEBI/KBBI.',
-            parameters: {
-              type: 'object',
-              properties: {
-                text: { type: 'string', description: 'Draf jawaban mentah Anda yang ingin diperbaiki.' }
-              },
-              required: ['text'],
-            },
-          },
-        },
+
         {
           type: 'function',
           function: {
@@ -231,11 +206,7 @@ Sebelum memberikan jawaban akhir kepada pengguna, Anda HARUS memanggil tool 'cor
       ];
 
       const toolRegistry: Record<string, (args: any) => Promise<string>> = {
-        correctGrammar: async (args: { text: string }) => {
-          console.log('Handing off to DeepSeek for grammar correction and final delivery...');
-          const polished = await evaluateAndCorrectGrammar(args.text);
-          throw new HandoffError(polished);
-        },
+
         fetchBibleVerse: async (args: { reference: string }) => {
           const parts = args.reference.match(/^(.*)\s+(\d+):(\d+)(?:-(\d+))?$/);
           if (parts) {
@@ -336,14 +307,14 @@ Sebelum memberikan jawaban akhir kepada pengguna, Anda HARUS memanggil tool 'cor
         }
       } else {
         hasToolCalls = false;
-        return responseMessage.content || '';
+        console.log('OpenAI finished RAG loop. Handing off draft to DeepSeek for polishing...');
+        const draft = responseMessage.content || '';
+        if (!draft) return '';
+        const polished = await evaluateAndCorrectGrammar(draft);
+        return polished;
       }
     }
   } catch (error: any) {
-    if (error.name === 'HandoffError') {
-      console.log('Successfully caught HandoffError, short-circuiting to frontend!');
-      return error.essay;
-    }
     console.error('Error generating RAG response:', error);
     throw error;
   }
